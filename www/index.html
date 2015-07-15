@@ -8,31 +8,143 @@
         <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height, target-densitydpi=device-dpi" />
         <script type="text/javascript" src="cordova.js"></script>
         <script type="text/javascript">
+
+function distance(lat1, lon1, lat2, lon2, unit) {
+    var radlat1 = Math.PI * lat1/180
+    var radlat2 = Math.PI * lat2/180
+    var radlon1 = Math.PI * lon1/180
+    var radlon2 = Math.PI * lon2/180
+    var theta = lon1-lon2
+    var radtheta = Math.PI * theta/180
+    var dist = Math.sin(radlat1) * Math.sin(radlat2) + Math.cos(radlat1) * Math.cos(radlat2) * Math.cos(radtheta);
+    dist = Math.acos(dist)
+    dist = dist * 180/Math.PI
+    dist = dist * 60 * 1.1515
+    if (unit=="K") { dist = dist * 1.609344 }
+    if (unit=="N") { dist = dist * 0.8684 }
+    return dist
+}
+
+
+	var music;
+	var click;
         
-			if (navigator.geolocation) {
-
-				navigator.geolocation.watchPosition(successCallback, errorCallback, {});
-
-				function successCallback(currentPosition) {
-					var lat = currentPosition.coords.latitude;
-					var lon = currentPosition.coords.longitude;
-
-					console.log(lat + " " + lon);				
-				}
+	function onWindowLoad() {
+		document.addEventListener('deviceready', onDeviceReady);
+	}
 	
-				function errorCallback(e) {
-					console.log(e);
-				}
-			}
-			
+	function onDeviceReady() {
+		window.alert("We are ready to go!");
+
+                if (navigator.geolocation) {
+
+                           navigator.geolocation.watchPosition(successCallback, errorCallback, {});
+
+                           function successCallback(currentPosition) {
+                                   var lat = currentPosition.coords.latitude;
+                                   var lon = currentPosition.coords.longitude;
+
+
+				   var distToOne = distance(lat, lon, locationOne.lat, locationOne.lon, 'M');
+				   var distToTwo = distance(lat, lon, locationTwo.lat, locationTwo.lon, 'M');
+				   
+				// map 1.0 though 0.0 in volume to 0 through distBetweenLocations 
+				var R = (1.0 - 0.0) / (0 - distBetweenLocations);
+				var volOne = 1 + distToOne * R;
+				var volTwo = 1 + distToTwo * R;
+				
+				document.getElementById('currentLocation').innerHTML = lat + " " + lon + " " + volOne + " " + volTwo;
+				music.volume = volOne;
+				click.volue = volTwo;
+				
+
+                                   //console.log(lat + " " + lon);
+                           }
+
+                           function errorCallback(e) {
+                                   console.log(e);
+                           }
+                }
+		
+		/*
+		if( window.plugins && window.plugins.NativeAudio ) {
+
+    			// Preload audio resources
+    			window.plugins.NativeAudio.preloadComplex('music', 'audio/music.mp3', 1, 1, 0, 
+				function(msg){
+					console.log('success: ' + msg);
+
+    			 		window.plugins.NativeAudio.play('music',
+						function (msg) {
+							console.log('play success ' + msg);
+						}, 
+						function (msg) {
+							console.log('play error ' + msg);
+						}
+			 		);
+    				},
+
+				function(msg) {
+        				console.log('error: ' + msg );
+    				}
+			);
+
+    			window.plugins.NativeAudio.preloadSimple( 'click', 'audio/other.mp3', function(msg){
+    				}, function(msg){
+        				console.log( 'error: ' + msg );
+    				}
+			);
+
+
+    			// Play
+    			//window.plugins.NativeAudio.play( 'click' );
+
+    			// Stop multichannel clip after 60 seconds
+    			window.setTimeout( function(){
+
+        			window.plugins.NativeAudio.stop( 'music' );
+        			window.plugins.NativeAudio.unload( 'music' );
+        			window.plugins.NativeAudio.unload( 'click' );
+
+    			}, 1000 * 60 );
+		}
+		*/
+
+		music = document.getElementById('music');
+		click = document.getElementById('click');
+	}
+	
+	window.addEventListener('load', onWindowLoad);
+
+	function playMusic() {
+		music.play();
+	}
+
+	function playClick() {
+		click.play();
+	}
+
+	var locationOne = {lat: 40.68819612, lon: -74.00101029};
+	var locationTwo = {lat: 40.68950567, lon: -73.99925103};
+
+	var distBetweenLocations = distance(locationOne.lat, locationOne.lon, locationTwo.lat, locationTwo.lon, 'M');
+	alert(distanceBetweenLocations);
 			
         </script>
-        <link rel="stylesheet" type="text/css" href="css/index.css" />
         <title>Weathering</title>
     </head>
     <body>
         <div>
             <h1>Weathering</h1>
+		<audio id="music" src="audio/music.mp3" preload="auto" loop controls></audio>
+		<input type="button" value="Play" onClick="playMusic();"><input type="button" value="Pause" onClick="pauseMusic();">
+		<br /><br />
+
+		<audio id="click" src="audio/click.mp3" preload="auto" loop controls></audio>
+		<input type="button" value="Play" onClick="playClick();"><input type="button" value="Pause" onclick="pauseClick();">
+
+		<div id="currentLocation">
+		</div>
         </div>
     </body>
 </html>
