@@ -5,15 +5,22 @@
         <meta name="format-detection" content="telephone=no" />
         <meta name="msapplication-tap-highlight" content="no" />
         <!-- WARNING: for iOS 7, remove the width=device-width and height=device-height attributes. See https://issues.apache.org/jira/browse/CB-4323 -->
+
+        <!--
+		HTML5 Audio barely works
+		PhoneGap Media barely works
+		PGLowLatencyAudio missing volume control
+		Native Audio has volume control for Android - need to check iOS
+    	-->
+
         <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height, target-densitydpi=device-dpi" />
         <script type="text/javascript" src="cordova.js"></script>
         <script type="text/javascript">
-        	var MAX_DISTANCE = .1; // Miles
-
+        	var MAX_DISTANCE = .2; // Miles
 
 			var audioTracks = [
-				"0.mp3",
-				"1.mp3"
+				"audio/0.mp3",
+				"audio/1.mp3"
 			];
 
 			var locations = [
@@ -45,17 +52,18 @@
 			function onWindowLoad() {
 				document.addEventListener('deviceready', onDeviceReady);
 
-				for (var i = 0; i < tracks.length; i++) {
-					var domElement = document.getElementById('track'+i);
-					console.log(domElement);
-					tracks[i].element = domElement;
-
-					tracks[i].element.play();
-				}				
 			}
 	
 			function onDeviceReady() {
 				console.log("onDeviceReady");
+
+
+				for (var i = 0; i < tracks.length; i++) {
+
+					window.plugins.NativeAudio.preloadSimple(i, tracks[i].audio, 1, function(message){console.log(message);}, function(error){console.log(error);});
+					window.plugins.NativeAudio.loop(i,function(message){console.log("success");}, function(error){console.log(error);});
+
+				}				
 
                 if (navigator.geolocation) 
                 {
@@ -83,22 +91,21 @@
 							if (volume < 0) { volume = 0; } 
 							else if (volume > 1) { volume = 1; }
 
-							if (volume > 0 && tracks[i].element.paused) {
-								tracks[i].element.play();
-								console.log("Triggering Play: " + i);
-							} else if (volume == 0) {
-								tracks[i].element.pause();
-								//console.log("Triggering Pause: " + i);
-							}
+							window.plugins.NativeAudio.setVolumeForComplexAsset(i,volume,function(message){console.log(message);}, function(error){console.log(error);});
+							//tracks[i].element.setVolume(volume);
 
-							console.log("Paused: " + tracks[i].element.paused);
-							//console.log("Ended: " + tracks[i].element.ended);
+							//if (volume > 0 && tracks[i].element.paused) {
+								//tracks[i].element.play(MEDIA_PLAY_OPTIONS);
+								//console.log("Triggering Play: " + i);
+							//} else if (volume == 0) {
+								//tracks[i].element.pause();
+								//console.log("Triggering Pause: " + i);
+							//}
 
 							console.log("Distance to track " + i + " " + distance + " volume: " + volume);
 
 							document.getElementById('track'+i+"volume").innerHTML = "D: " + Number((distance).toFixed(2)) + " V: " + Number((volume).toFixed(2));
 
-							tracks[i].element.volume = volume;
 						}
 				   
 					}
@@ -163,11 +170,11 @@
         <div>
             <h1>Weathering</h1>
 			
-			<div id="track0div"><audio id="track0" src="audio/0.mp3" preload="auto" loop controls></audio><div id="track0volume"></div><div>
+			<div id="track0div"><div id="track0volume"></div><div>
 
 			<br /><br />
 			
-			<div id="track1div"><audio id="track1" src="audio/1.mp3" preload="auto" loop controls></audio><div id="track1volume"></div></div>
+			<div id="track1div"><div id="track1volume"></div></div>
 
 			<br /><br />
 
