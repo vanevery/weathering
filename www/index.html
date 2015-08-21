@@ -18,20 +18,26 @@
         <script type="text/javascript">
         	var MAX_DISTANCE = .2; // Miles
 
-			var audioTracks = [
-				"audio/0.mp3",
-				"audio/1.mp3"
-			];
-
 			var locations = [
-				{lat: 40.68819612, lon: -74.00101029},
-				{lat: 40.68950567, lon: -73.99925103}
-			];
 
-        	var tracks = [
-        		{audio: audioTracks[0], location: locations[0]},
-        		{audio: audioTracks[1], location: locations[1]}
-        	];
+				{lat: 42.340324, lon: -71.099859, label: "Culverted Mouth of Muddy River", audio: "audio/atmos1.mp3"},
+
+				{lat: 42.341900, lon: -71.094911, label: "Rose Garden", audio: "audio/atmos2.mp3"},
+
+				{lat: 42.341521, lon: -71.094150, label: "Flock of Students", audio: "audio/FENE-40_01.mp3"},
+
+				{lat: 42.345078, lon: -71.094128, label: "Old ISGM plot in Victory Garden", audio: "audio/story1.mp3"},
+
+				{lat: 42.345219, lon: -71.093934, label: "New ISGM plot in Victory Garden", audio: "audio/story2.mp3"},
+
+				{lat: 42.344838, lon: -71.092401, label: "Japanese Knotweed / Phragmites", audio: "audio/atmos1.mp3"},
+
+				{lat: 42.345664, lon: -71.092656, label: "Jin / Victory Garden", audio: "audio/atmos2.mp3"},
+
+				{lat: 42.345759, lon: -71.092820, label: "Jin / Victory Garden 3", audio: "audio/FENE-40_01.mp3"},
+
+				{lat: 42.345833, lon: -71.092896, label: "Bonnie / Victory Garden", audio: "audio/story1.mp3"}
+			];
 
 			function geoDistance(lat1, lon1, lat2, lon2, unit) {
 			    var radlat1 = Math.PI * lat1/180
@@ -51,18 +57,16 @@
         
 			function onWindowLoad() {
 				document.addEventListener('deviceready', onDeviceReady);
-
 			}
 	
 			function onDeviceReady() {
 				console.log("onDeviceReady");
 
-
 				for (var i = 0; i < tracks.length; i++) {
 
-					window.plugins.NativeAudio.preloadSimple(i, tracks[i].audio, 1, function(message){console.log(message);}, function(error){console.log(error);});
-					window.plugins.NativeAudio.loop(i,function(message){console.log("success");}, function(error){console.log(error);});
+					window.plugins.NativeAudio.preloadSimple(i, tracks[i].audio, tracks.length, function(message){console.log(message);}, function(error){console.log(error);});
 
+					window.plugins.NativeAudio.loop(i,function(message){console.log(message);}, function(error){console.log(error);});
 				}				
 
                 if (navigator.geolocation) 
@@ -72,8 +76,8 @@
                 	navigator.geolocation.watchPosition(locationWatchPositionCallback, locationWatchPositionErrorCallback, 
                 		{ maximumAge: 3000, timeout: 5000, enableHighAccuracy: true });
 
-                   function locationWatchPositionCallback(currentPosition) 
-                   {
+                    function locationWatchPositionCallback(currentPosition) 
+                    {
                    		console.log("locationWatchPositionCallback");
 
 	                	var currentLat = currentPosition.coords.latitude;
@@ -92,7 +96,6 @@
 							else if (volume > 1) { volume = 1; }
 
 							window.plugins.NativeAudio.setVolumeForComplexAsset(i,volume,function(message){console.log(message);}, function(error){console.log(error);});
-							//tracks[i].element.setVolume(volume);
 
 							//if (volume > 0 && tracks[i].element.paused) {
 								//tracks[i].element.play(MEDIA_PLAY_OPTIONS);
@@ -110,9 +113,9 @@
 				   
 					}
 
-                   function locationWatchPositionErrorCallback(e) {
+                    function locationWatchPositionErrorCallback(e) {
          	          console.log(e);
-                   }
+                    }
                 }
 		
 		/*
