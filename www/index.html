@@ -64,9 +64,13 @@
 
 				for (var i = 0; i < tracks.length; i++) {
 
-					window.plugins.NativeAudio.preloadSimple(i, tracks[i].audio, tracks.length, function(message){console.log(message);}, function(error){console.log(error);});
+					window.plugins.NativeAudio.preloadSimple(i, locations[i].audio, function(message){console.log(message);}, function(error){console.log(error);});
 
 					window.plugins.NativeAudio.loop(i,function(message){console.log(message);}, function(error){console.log(error);});
+
+					var div = document.createElement("div");
+					div.setAttribute("id","location"+i);
+					document.getElementById("locations").appendChild(div);
 				}				
 
                 if (navigator.geolocation) 
@@ -87,8 +91,8 @@
 
 						document.getElementById('currentLocation').innerHTML = currentLat + " " + currentLon;
 
-						for (var i = 0; i < tracks.length; i++) {
-							var distance = geoDistance(currentLat, currentLon, tracks[i].location.lat, tracks[i].location.lon, 'M');
+						for (var i = 0; i < locations.length; i++) {
+							var distance = geoDistance(currentLat, currentLon, locations[i].lat, locations[i].lon, 'M');
 
 							var volume = 1 - distance/MAX_DISTANCE;
 
@@ -107,8 +111,8 @@
 
 							console.log("Distance to track " + i + " " + distance + " volume: " + volume);
 
-							document.getElementById('track'+i+"volume").innerHTML = "D: " + Number((distance).toFixed(2)) + " V: " + Number((volume).toFixed(2));
-
+							document.getElementById('location'+i).innerHTML =
+							locations[i].label + " Dist: " + Number((distance).toFixed(2)) + " Vol: " + Number((volume).toFixed(2));
 						}
 				   
 					}
@@ -173,13 +177,9 @@
         <div>
             <h1>Weathering</h1>
 			
-			<div id="track0div"><div id="track0volume"></div><div>
+			<div id="locations">
 
-			<br /><br />
-			
-			<div id="track1div"><div id="track1volume"></div></div>
-
-			<br /><br />
+			</div>
 
 			<div id="currentLocation"></div>
         </div>
