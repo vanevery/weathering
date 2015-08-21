@@ -16,7 +16,25 @@
         <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height, target-densitydpi=device-dpi" />
         <script type="text/javascript" src="cordova.js"></script>
         <script type="text/javascript">
-        	var MAX_DISTANCE = .2; // Miles
+        	var MAX_DISTANCE = .5; // Miles
+
+        	var latCenter = 42.340324;
+        	var lonCenter = -71.099859;
+        	var diffLat = 0;
+        	var diffLon = 0;
+        	var currentLat = 0;
+			var currentLon = 0;
+
+        	function recenter() {
+				diffLat = latCenter - currentLat;
+    	    	diffLon = lonCenter - currentLon;
+    	    }
+        			
+        	function changeDistance(dist) {
+        		MAX_DISTANCE = dist;
+        		document.getElementById('dist').innerHTML = dist;
+        		console.log(MAX_DISTANCE);
+        	}	
 
 			var locations = [
 
@@ -62,11 +80,31 @@
 			function onDeviceReady() {
 				console.log("onDeviceReady");
 
-				for (var i = 0; i < tracks.length; i++) {
+				// Should switch to foreach
+				function createPreloadSuccessCallback(closed_i) {
+					return function(message) {
+						console.log("Preload " + closed_i + " " + message);
 
-					window.plugins.NativeAudio.preloadSimple(i, locations[i].audio, function(message){console.log(message);}, function(error){console.log(error);});
+						window.plugins.NativeAudio.loop(closed_i,
+							function(message) {
+								console.log(message);
+							}, 
+							function(error){
+								console.log(error);
+							}
+						);
+					};
+				}
 
-					window.plugins.NativeAudio.loop(i,function(message){console.log(message);}, function(error){console.log(error);});
+				for (var i = 0; i < locations.length; i++) {
+
+					window.plugins.NativeAudio.preloadSimple(i, 
+						locations[i].audio, 
+						createPreloadSuccessCallback(i), 
+						function(error){
+							console.log(error);
+						}
+					);
 
 					var div = document.createElement("div");
 					div.setAttribute("id","location"+i);
@@ -82,12 +120,15 @@
 
                     function locationWatchPositionCallback(currentPosition) 
                     {
-                   		console.log("locationWatchPositionCallback");
+                   		//console.log("locationWatchPositionCallback");
 
-	                	var currentLat = currentPosition.coords.latitude;
-						var currentLon = currentPosition.coords.longitude;
+	                	currentLat = currentPosition.coords.latitude;
+						currentLon = currentPosition.coords.longitude;
 
-						console.log(currentLat + " " + currentLon);
+        				currentLat += diffLat;
+        				currentLon += diffLon;
+
+						//console.log(currentLat + " " + currentLon);
 
 						document.getElementById('currentLocation').innerHTML = currentLat + " " + currentLon;
 
@@ -109,10 +150,10 @@
 								//console.log("Triggering Pause: " + i);
 							//}
 
-							console.log("Distance to track " + i + " " + distance + " volume: " + volume);
+							//console.log("Distance to location " + i + " " + distance + " volume: " + volume);
 
 							document.getElementById('location'+i).innerHTML =
-							locations[i].label + " Dist: " + Number((distance).toFixed(2)) + " Vol: " + Number((volume).toFixed(2));
+							i + " " + locations[i].label + " Dist: " + Number((distance).toFixed(2)) + " Vol: " + Number((volume).toFixed(2));
 						}
 				   
 					}
@@ -182,6 +223,12 @@
 			</div>
 
 			<div id="currentLocation"></div>
+			<br /><br />
+			Max Distance: <input id="distance" type="range" min="0" max="1" step=".1" onchange="changeDistance(this.value);"/>
+			<div id="dist"></div>
+			<br /><br />
+			<button id="center" onclick="recenter();">Recenter</button>
+
         </div>
     </body>
 </html>
