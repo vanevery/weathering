@@ -25,6 +25,12 @@
         	var currentLat = 0;
 			var currentLon = 0;
 
+			function log(message) {
+				document.getElementById('log').innerHTML = message + document.getElementById('log').innerHTML;
+
+				console.log(message);
+			}
+
         	function recenter() {
 				diffLat = latCenter - currentLat;
     	    	diffLon = lonCenter - currentLon;
@@ -33,7 +39,7 @@
         	function changeDistance(dist) {
         		MAX_DISTANCE = dist;
         		document.getElementById('dist').innerHTML = dist;
-        		console.log(MAX_DISTANCE);
+        		log(MAX_DISTANCE);
         	}	
 
 			var locations = [
@@ -73,24 +79,75 @@
 			    return dist
 			}
         
+			function locationWatchPositionCallback(currentPosition) 
+            {
+           		log("locationWatchPositionCallback");           		
+
+            	currentLat = currentPosition.coords.latitude;
+				currentLon = currentPosition.coords.longitude;
+
+				currentLat += diffLat;
+				currentLon += diffLon;
+
+				//log(currentLat + " " + currentLon);
+
+				document.getElementById('currentLocation').innerHTML = currentLat + " " + currentLon;
+
+				for (var i = 0; i < locations.length; i++) {
+					var distance = geoDistance(currentLat, currentLon, locations[i].lat, locations[i].lon, 'M');
+
+					var volume = 1 - distance/MAX_DISTANCE;
+
+					if (volume < 0) { volume = 0; } 
+					else if (volume > 1) { volume = 1; }
+
+					window.plugins.NativeAudio.setVolumeForComplexAsset(i,volume,function(message){log(message);}, function(error){log(error);});
+
+					//if (volume > 0 && tracks[i].element.paused) {
+						//tracks[i].element.play(MEDIA_PLAY_OPTIONS);
+						//log("Triggering Play: " + i);
+					//} else if (volume == 0) {
+						//tracks[i].element.pause();
+						//log("Triggering Pause: " + i);
+					//}
+
+					//log("Distance to location " + i + " " + distance + " volume: " + volume);
+
+					document.getElementById('location'+i).innerHTML =
+					i + " " + locations[i].label + " Dist: " + Number((distance).toFixed(2)) + " Vol: " + Number((volume).toFixed(2));
+				}
+
+				setTimeout(
+					function() { 
+						navigator.geolocation.getCurrentPosition(locationWatchPositionCallback, locationWatchPositionErrorCallback, 
+                			{ maximumAge: 3000, timeout: 3000, enableHighAccuracy: false });
+					}, 
+					5000);
+
+			}
+
+            function locationWatchPositionErrorCallback(e) {
+ 	          log(e);
+            }
+
 			function onWindowLoad() {
 				document.addEventListener('deviceready', onDeviceReady);
 			}
 	
 			function onDeviceReady() {
-				console.log("onDeviceReady");
+				log("onDeviceReady");
 
 				// Should switch to foreach
 				function createPreloadSuccessCallback(closed_i) {
 					return function(message) {
-						console.log("Preload " + closed_i + " " + message);
+						log("Preload " + closed_i + " " + message);
 
 						window.plugins.NativeAudio.loop(closed_i,
 							function(message) {
-								console.log(message);
+								log(message);
 							}, 
 							function(error){
-								console.log(error);
+								log(error);
 							}
 						);
 					};
@@ -98,14 +155,25 @@
 
 				for (var i = 0; i < locations.length; i++) {
 
+					/*
 					window.plugins.NativeAudio.preloadSimple(i, 
 						locations[i].audio, 
 						createPreloadSuccessCallback(i), 
 						function(error){
-							console.log(error);
+							log(error);
 						}
 					);
+					*/
+					//id, assetPath, volume, voices, delay, successCallback, errorCallback
 
+					window.plugins.NativeAudio.preloadComplex(i, 
+						locations[i].audio, 0.0, 1, 0, 
+						createPreloadSuccessCallback(i), 
+						function(error){
+							log(error);
+						}
+					);
+					
 					var div = document.createElement("div");
 					div.setAttribute("id","location"+i);
 					document.getElementById("locations").appendChild(div);
@@ -113,99 +181,20 @@
 
                 if (navigator.geolocation) 
                 {
-                	console.log("navigator.geolocation");
+                	log("navigator.geolocation");
 
+                	// Test this on Android
+					navigator.geolocation.getCurrentPosition(locationWatchPositionCallback, locationWatchPositionErrorCallback, 
+                		{ maximumAge: 3000, timeout: 3000, enableHighAccuracy: false });
+
+                	/*
                 	navigator.geolocation.watchPosition(locationWatchPositionCallback, locationWatchPositionErrorCallback, 
-                		{ maximumAge: 3000, timeout: 5000, enableHighAccuracy: true });
-
-                    function locationWatchPositionCallback(currentPosition) 
-                    {
-                   		//console.log("locationWatchPositionCallback");
-
-	                	currentLat = currentPosition.coords.latitude;
-						currentLon = currentPosition.coords.longitude;
-
-        				currentLat += diffLat;
-        				currentLon += diffLon;
-
-						//console.log(currentLat + " " + currentLon);
-
-						document.getElementById('currentLocation').innerHTML = currentLat + " " + currentLon;
-
-						for (var i = 0; i < locations.length; i++) {
-							var distance = geoDistance(currentLat, currentLon, locations[i].lat, locations[i].lon, 'M');
-
-							var volume = 1 - distance/MAX_DISTANCE;
-
-							if (volume < 0) { volume = 0; } 
-							else if (volume > 1) { volume = 1; }
-
-							window.plugins.NativeAudio.setVolumeForComplexAsset(i,volume,function(message){console.log(message);}, function(error){console.log(error);});
-
-							//if (volume > 0 && tracks[i].element.paused) {
-								//tracks[i].element.play(MEDIA_PLAY_OPTIONS);
-								//console.log("Triggering Play: " + i);
-							//} else if (volume == 0) {
-								//tracks[i].element.pause();
-								//console.log("Triggering Pause: " + i);
-							//}
-
-							//console.log("Distance to location " + i + " " + distance + " volume: " + volume);
-
-							document.getElementById('location'+i).innerHTML =
-							i + " " + locations[i].label + " Dist: " + Number((distance).toFixed(2)) + " Vol: " + Number((volume).toFixed(2));
-						}
-				   
-					}
-
-                    function locationWatchPositionErrorCallback(e) {
-         	          console.log(e);
-                    }
+                		{ maximumAge: 3000, timeout: 5000, enableHighAccuracy: false });
+					*/
+                    
                 }
 		
-		/*
-		if( window.plugins && window.plugins.NativeAudio ) {
-
-    			// Preload audio resources
-    			window.plugins.NativeAudio.preloadComplex('music', 'audio/music.mp3', 1, 1, 0, 
-				function(msg){
-					console.log('success: ' + msg);
-
-    			 		window.plugins.NativeAudio.play('music',
-						function (msg) {
-							console.log('play success ' + msg);
-						}, 
-						function (msg) {
-							console.log('play error ' + msg);
-						}
-			 		);
-    				},
-
-				function(msg) {
-        				console.log('error: ' + msg );
-    				}
-			);
-
-    			window.plugins.NativeAudio.preloadSimple( 'click', 'audio/other.mp3', function(msg){
-    				}, function(msg){
-        				console.log( 'error: ' + msg );
-    				}
-			);
-
-
-    			// Play
-    			//window.plugins.NativeAudio.play( 'click' );
-
-    			// Stop multichannel clip after 60 seconds
-    			window.setTimeout( function(){
-
-        			window.plugins.NativeAudio.stop( 'music' );
-        			window.plugins.NativeAudio.unload( 'music' );
-        			window.plugins.NativeAudio.unload( 'click' );
-
-    			}, 1000 * 60 );
-		}
-		*/
+		
 
 			}
 	
@@ -228,7 +217,7 @@
 			<div id="dist"></div>
 			<br /><br />
 			<button id="center" onclick="recenter();">Recenter</button>
-
+			<div id="log"></div>
         </div>
     </body>
 </html>
