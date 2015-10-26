@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <meta name="format-detection" content="telephone=no" />
+        <meta name="msapplication-tap-highlight" content="no" />
+        <!-- WARNING: for iOS 7, remove the width=device-width and height=device-height attributes. See https://issues.apache.org/jira/browse/CB-4323 -->
+
+        <!--
+		HTML5 Audio barely works
+		PhoneGap Media barely works
+		PGLowLatencyAudio missing volume control
+		Native Audio has volume control for Android - need to check iOS
+    	-->
+
+        <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height, target-densitydpi=device-dpi" />
+        <script type="text/javascript" src="cordova.js"></script>
+        <script type="text/javascript">
+        	var MAX_DISTANCE = .050; // KM  .1 is 100 meters
+
+        	var latCenter = 42.346367;
+        	var lonCenter = -71.093021;
+        	var diffLat = 0;
+        	var diffLon = 0;
+        	var currentLat = 0;
+			var currentLon = 0;
+
+			function log(message) {
+				document.getElementById('log').innerHTML = message + " " + document.getElementById('log').innerHTML;
+
+				console.log(message);
+			}
+
+        	function recenter() {
+				diffLat = latCenter - currentLat;
+    	    	diffLon = lonCenter - currentLon;
+    	    }
+        			
+        	function changeDistance(dist) {
+        		MAX_DISTANCE = dist;
+        		document.getElementById('dist').innerHTML = dist;
+        		log(MAX_DISTANCE);
+
+        		update();
+        	}	
+
+        	function update() {
+				for (var i = 0; i < locations.length; i++) {
+					var distance = geoDistance(currentLat, currentLon, locations[i].lat, locations[i].lon, 'K');
+
+					var volume = 1 - distance/MAX_DISTANCE;
+
+					if (volume < 0) { volume = 0; } 
+					else if (volume > 1) { volume = 1; }
+
+					window.plugins.NativeAudio.setVolumeForComplexAsset(i,volume,function(message){log(message);}, function(error){log(error);});
+
+					//if (volume > 0 && tracks[i].element.paused) {
+						//tracks[i].element.play(MEDIA_PLAY_OPTIONS);
+						//log("Triggering Play: " + i);
+					//} else if (volume == 0) {
+						//tracks[i].element.pause();
+						//log("Triggering Pause: " + i);
+					//}
+
+					//log("Distance to location " + i + " " + distance + " volume: " + volume);
+
+					document.getElementById('location'+i).innerHTML =
+					i + " " + locations[i].label + " Dist: " + Number((distance).toFixed(3)) + "KM  Vol: " + Number((volume).toFixed(2));
+				}        		
+        	}
+
+			var locations = [
+
+				{lat: 42.346367, lon: -71.093021, label: "Richardson Bridge metal plate VG", audio: "audio/atmos1.mp3"},
+
+				{lat: 42.345762, lon: -71.093623, label: "Huge Willow Tree VG", audio: "audio/atmos2.mp3"},
+
+				{lat: 42.345653, lon: -71.093658, label: "Huge Oak Tree VG", audio: "audio/FENE-40_01.mp3"},
+
+				{lat: 42.345610, lon: -71.093169, label: "Elm Bark Beetle Map VG", audio: "audio/story1.mp3"},
+
+				{lat: 42.345772, lon: -71.093009, label: "Dawn Redwood", audio: "audio/story2.mp3"}
+
+				/*
+				{lat: 42.340324, lon: -71.099859, label: "Culverted Mouth of Muddy River", audio: "audio/atmos1.mp3"},
+
+				{lat: 42.341900, lon: -71.094911, label: "Rose Garden", audio: "audio/atmos2.mp3"},
+
+				{lat: 42.341521, lon: -71.094150, label: "Flock of Students", audio: "audio/FENE-40_01.mp3"},
+
+				{lat: 42.345078, lon: -71.094128, label: "Old ISGM plot in Victory Garden", audio: "audio/story1.mp3"},
+
+				{lat: 42.345219, lon: -71.093934, label: "New ISGM plot in Victory Garden", audio: "audio/story2.mp3"},
+
+				{lat: 42.344838, lon: -71.092401, label: "Japanese Knotweed / Phragmites", audio: "audio/atmos1.mp3"},
+
+				{lat: 42.345664, lon: -71.092656, label: "Jin / Victory Garden", audio: "audio/atmos2.mp3"},
+
+				{lat: 42.345759, lon: -71.092820, label: "Jin / Victory Garden 3", audio: "audio/FENE-40_01.mp3"},
+
+				{lat: 42.345833, lon: -71.092896, label: "Bonnie / Victory Garden", audio: "audio/story1.mp3"}
+				*/
+			];
+
+			function geoDistance(lat1, lon1, lat2, lon2, unit) {
+			    var radlat1 = Math.PI * lat1/180
+			    var radlat2 = Math.PI * lat2/180
+			    var radlon1 = Math.PI * lon1/180
+			    var radlon2 = Math.PI * lon2/180
+			    var theta = lon1-lon2
+			    var radtheta = Math.PI * theta/180
+			    var dist = Math.sin(radlat1) * Math.sin(radlat2) + Math.cos(radlat1) * Math.cos(radlat2) * Math.cos(radtheta);
+			    dist = Math.acos(dist)
+			    dist = dist * 180/Math.PI
+			    dist = dist * 60 * 1.1515
+			    if (unit=="K") { dist = dist * 1.609344 }
+			    if (unit=="N") { dist = dist * 0.8684 }
+			    return dist
+			}
+        	
+        	var count = 0;
+			function locationWatchPositionCallback(currentPosition) 
+            {
+           		log("locationWatchPositionCallback"+count);           		
+           		count++;
+
+            	currentLat = currentPosition.coords.latitude;
+				currentLon = currentPosition.coords.longitude;
+
+				currentLat += diffLat;
+				currentLon += diffLon;
+
+				//log(currentLat + " " + currentLon);
+
+				document.getElementById('currentLocation').innerHTML = currentLat + " " + currentLon;
+
+				update();
+
+				setTimeout(
+					function() { 
+						navigator.geolocation.getCurrentPosition(locationWatchPositionCallback, locationWatchPositionErrorCallback, 
+                			{ maximumAge: 3000, timeout: 3000, enableHighAccuracy: true });
+					}, 
+					5000);
+
+			}
+
+            function locationWatchPositionErrorCallback(e) {
+ 	          log(e);
+            }
+
+			function onWindowLoad() {
+				document.addEventListener('deviceready', onDeviceReady);
+			}
+	
+			function onDeviceReady() {
+				log("onDeviceReady");
+
+				// Should switch to foreach
+				function createPreloadSuccessCallback(closed_i) {
+					return function(message) {
+						log("Preload " + closed_i + " " + message);
+
+						window.plugins.NativeAudio.loop(closed_i,
+							function(message) {
+								log(message);
+							}, 
+							function(error){
+								log(error);
+							}
+						);
+					};
+				}
+
+				for (var i = 0; i < locations.length; i++) {
+
+					/*
+					window.plugins.NativeAudio.preloadSimple(i, 
+						locations[i].audio, 
+						createPreloadSuccessCallback(i), 
+						function(error){
+							log(error);
+						}
+					);
+					*/
+					//id, assetPath, volume, voices, delay, successCallback, errorCallback
+
+					window.plugins.NativeAudio.preloadComplex(i, 
+						locations[i].audio, 0.0, 1, 0, 
+						createPreloadSuccessCallback(i), 
+						function(error){
+							log(error);
+						}
+					);
+					
+					var div = document.createElement("div");
+					div.setAttribute("id","location"+i);
+					document.getElementById("locations").appendChild(div);
+				}				
+
+                if (navigator.geolocation) 
+                {
+                	log("navigator.geolocation");
+
+                	// Test this on Android
+					navigator.geolocation.getCurrentPosition(locationWatchPositionCallback, locationWatchPositionErrorCallback, 
+                		{ maximumAge: 3000, timeout: 3000, enableHighAccuracy: true });
+
+                	/*
+                	navigator.geolocation.watchPosition(locationWatchPositionCallback, locationWatchPositionErrorCallback, 
+                		{ maximumAge: 3000, timeout: 5000, enableHighAccuracy: false });
+					*/
+                    
+                }
+		
+		
+
+			}
+	
+			window.addEventListener('load', onWindowLoad);
+
+        </script>
+        <title>Weathering</title>
+    </head>
+    <body>
+        <div>
+            <h1>Weathering</h1>
+			
+			<div id="locations">
+
+			</div>
+
+			<div id="currentLocation"></div>
+			<br /><br />
+			Max Distance: 
+			<select id="distance" onchange="changeDistance(this.value);">
+				<option value="0">0</option>
+				<option value=".005">5 Meters</option>
+				<option value=".01">10 Meters</option>
+				<option value=".02">20 Meters</option>
+				<option value=".03">30 Meters</option>
+				<option value=".04">40 Meters</option>
+				<option value=".05" selected>50 Meters</option>
+				<option value=".1">100 Meters</option>
+				<option value=".2">200 Meters</option>
+				<option value=".5">500 Meters</option>
+				<option value="1">1 KM</option>
+				<option value="2">2 KM</option>
+			</select>
+
+			<div id="dist"></div>
+			<br /><br />
+			<button id="center" onclick="recenter();">Recenter</button>
+			<div id="log"></div>
+        </div>
+    </body>
+</html>
