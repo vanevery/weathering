@@ -27,8 +27,10 @@
 
         	var MAX_DISTANCE = .050; // KM  .1 is 100 meters
 
-        	var latCenter = 42.346367;
-        	var lngCenter = -71.093021;
+        	var FADE_INTERVAL = 200; // milliseconds
+
+        	var latCenter = 42.345762;
+        	var lngCenter = -71.093623;
         	var diffLat = 0;
         	var diffLng = 0;
         	var currentLat = 0;
@@ -83,53 +85,119 @@
         	}	
 			*/
 
+			function fadeOut(index) {
+				// If we have a fadein going on, cancel it
+				if (locations[index].fadein) {
+					locations[index].fadein = false;
+
+					// Clear any existing fadeIn or fadeOut timeouts
+					if (locations[index].fadeTimeout != null) {
+						clearTimeout(locations[index].fadeTimeout);
+						locations[index].fadeTimeout = null;
+					}
+				}
+				else
+				{
+					// If we are greater than 0 then we can do a fadeout
+					if (locations[index].volume > 0) {
+
+						log("fadeOut " + locations[index]);
+
+						// set fadeout to true so know what's up
+						locations[index].fadeout = true;
+
+						// Lower the volume
+						locations[index].volume = locations[index].volume - FADE_INTERVAL/locations[index].fadeouttime;
+														//1/(location.fadeouttime/FADE_INTERVAL);
+
+						// Set the timeout to actually do the volume lowering
+						var fadeTimeout = setTimeout(function() {
+							window.plugins.NativeAudio.setVolumeForComplexAsset(index,locations[index].volume,	function(message){log(message);}, function(error){log(error);});
+							// Call the fadeOut again	
+							fadeOut(index);
+							// After a set interval
+						},FADE_INTERVAL);
+
+						// Store the timeout object
+						locations[index].fadeTimeout = fadeTimeout;
+					} else {
+						// Otherwise we are done and we'll set fadeout to false
+						locations[index].fadeout = false;
+					}
+				}
+			}
+
+			function fadeIn(index) {
+
+				// If we have a fadeout going on, cancel it
+				if (locations[index].fadeout) {
+					locations[index].fadeout = false;
+
+					// Clear any existing fadeIn or fadeOut timeouts
+					if (locations[index].fadeTimeout != null) {
+						clearTimeout(locations[index].fadeTimeout);
+						locations[index].fadeTimeout = null;
+					}
+				}
+				else
+				{
+					// If we don't have a fadeout going on, do a fade in
+
+					// If we are less than 1 then we can do a fadein
+					if (locations[index].volume < 1) {
+						log("fadeIn " + locations[index]);
+	
+						// set fadeout to true so know what's up
+						locations[index].fadein = true;
+
+						// Lower the volume
+						locations[index].volume = locations[index].volume + FADE_INTERVAL/locations[index].fadeintime;
+														//1/(location.fadeouttime/FADE_INTERVAL);
+
+						// Set the timeout to actually do the volume lowering
+						var fadeTimeout = setTimeout(function() {
+							window.plugins.NativeAudio.setVolumeForComplexAsset(index,locations[index].volume,	function(message){log(message);}, function(error){log(error);});
+							// Call the fadeOut again	
+							fadeIn(index);
+							// After a set interval
+						},FADE_INTERVAL);
+
+						// Store the timeout object
+						locations[index].fadeTimeout = fadeTimeout;
+					} else {
+						// Otherwise we are done and we'll set fadein to false
+						locations[index].fadein = false;
+					}
+				}
+			}
+
         	function update(pos) {
 				for (var i = 0; i < locations.length; i++) {
-					var volume = 0;
 					if (inside(pos, locations[i].bounds)) {
-						volume = 1;
+						if (locations[i].volume != 1 && locations[i].fadein == false) {
+							fadeIn(i);
+						}
 					} else {
-						volume = 0;
+						if (locations[i].volume != 0 && locations[i].fadeout == false) {
+							fadeOut(i);
+						}
 					}
-					window.plugins.NativeAudio.setVolumeForComplexAsset(i,volume,function(message){log(message);}, function(error){log(error);});						
-					/*
-					var distance = geoDistance(currentLat, currentLng, locations[i].lat, locations[i].lng, 'K');
-
-					var volume = 1 - distance/MAX_DISTANCE;
-
-					if (volume < 0) { volume = 0; } 
-					else if (volume > 1) { volume = 1; }
-
-					window.plugins.NativeAudio.setVolumeForComplexAsset(i,volume,function(message){log(message);}, function(error){log(error);});
-					*/
-
-					//if (volume > 0 && tracks[i].element.paused) {
-						//tracks[i].element.play(MEDIA_PLAY_OPTIONS);
-						//log("Triggering Play: " + i);
-					//} else if (volume == 0) {
-						//tracks[i].element.pause();
-						//log("Triggering Pause: " + i);
-					//}
-
-					//log("Distance to location " + i + " " + distance + " volume: " + volume);
-
-
-		
-		
 				}        		
         	}
 
 			var locations = [
 
-				{lat: 42.346367, lng: -71.093021, label: "Richardson Bridge metal plate VG", audio: "audio/atmos1.mp3", bounds: [{lat: 42.346464, lng: -71.093055}, {lat: 42.346227, lng: -71.092669}, {lat: 42.346056, lng: -71.092889}, {lat: 42.34629, lng: -71.093259}]},
+				{lat: 42.338853, lng: -71.096248, label: "Richardson Bridge metal plate VG", audio: "audio/atmos1.mp3", bounds: [{lat: 42.338602, lng: -71.098183}, {lat: 42.338285, lng: -71.097518}, {lat: 42.338689, lng: -71.097207}, {lat: 42.338998, lng: -71.097636}, {lat: 42.339006, lng: -71.097926}], volume: 0, fadein: false, fadeout: false, fadeintime: 2000, fadeouttime: 3000, fadeTimeout: null},
 
-				{lat: 42.345762, lng: -71.093623, label: "Huge Willow Tree VG", audio: "audio/atmos2.mp3", bounds: [{lat: 42.345991, lng: -71.093578}, {lat: 42.345773, lng: -71.093229}, {lat: 42.345582, lng: -71.093449}, {lat: 42.345783, lng: -71.093787}]},
+				/*{lat: 42.346367, lng: -71.093021, label: "Richardson Bridge metal plate VG", audio: "audio/atmos1.mp3", bounds: [{lat: 42.346464, lng: -71.093055}, {lat: 42.346227, lng: -71.092669}, {lat: 42.346056, lng: -71.092889}, {lat: 42.34629, lng: -71.093259}], volume: 0, fadein: false; fadeout: false, fadeintime: 2000, fadeouttime: 3000, fadeTimeout: null},*/
 
-				{lat: 42.345653, lng: -71.093658, label: "Huge Oak Tree VG", audio: "audio/FENE-40_01.mp3", bounds: [{lat: 42.345683, lng: -71.0939}, {lat: 42.345842, lng: -71.093726}, {lat: 42.345636, lng: -71.093382}, {lat: 42.345489, lng: -71.093591}]},
+				{lat: 42.345762, lng: -71.093623, label: "Huge Willow Tree VG", audio: "audio/atmos2.mp3", bounds: [{lat: 42.345991, lng: -71.093578}, {lat: 42.345773, lng: -71.093229}, {lat: 42.345582, lng: -71.093449}, {lat: 42.345783, lng: -71.093787}], volume: 0, fadein: false, fadeout: false, fadeintime: 2000, fadeouttime: 3000, fadeTimeout: null},
 
-				{lat: 42.345610, lng: -71.093169, label: "Elm Bark Beetle Map VG", audio: "audio/story1.mp3", bounds: [{lat: 42.345808, lng: -71.09328}, {lat: 42.345675, lng: -71.093449}, {lat: 42.345555, lng: -71.09328}, {lat: 42.345697, lng: -71.093101}]},
+				{lat: 42.345653, lng: -71.093658, label: "Huge Oak Tree VG", audio: "audio/FENE-40_01.mp3", bounds: [{lat: 42.345683, lng: -71.0939}, {lat: 42.345842, lng: -71.093726}, {lat: 42.345636, lng: -71.093382}, {lat: 42.345489, lng: -71.093591}], volume: 0, fadein: false, fadeout: false, fadeintime: 2000, fadeouttime: 3000, fadeTimeout: null},
 
-				{lat: 42.345772, lng: -71.093009, label: "Dawn Redwood", audio: "audio/story2.mp3", bounds: [{lat: 42.345862, lng: -71.093017}, {lat: 42.345699, lng: -71.093229}, {lat: 42.345551, lng: -71.09302}, {lat: 42.345711, lng: -71.092808}]}
+				{lat: 42.345610, lng: -71.093169, label: "Elm Bark Beetle Map VG", audio: "audio/story1.mp3", bounds: [{lat: 42.345808, lng: -71.09328}, {lat: 42.345675, lng: -71.093449}, {lat: 42.345555, lng: -71.09328}, {lat: 42.345697, lng: -71.093101}], volume: 0, fadein: false, fadeout: false, fadeintime: 2000, fadeouttime: 3000, fadeTimeout: null},
+
+				{lat: 42.345772, lng: -71.093009, label: "Dawn Redwood", audio: "audio/story2.mp3", bounds: [{lat: 42.345862, lng: -71.093017}, {lat: 42.345699, lng: -71.093229}, {lat: 42.345551, lng: -71.09302}, {lat: 42.345711, lng: -71.092808}], volume: 0, fadein: false, fadeout: false, fadeintime: 2000, fadeouttime: 3000, fadeTimeout: null}
 
 				/*
 				{lat: 42.340324, lon: -71.099859, label: "Culverted Mouth of Muddy River", audio: "audio/atmos1.mp3"},
