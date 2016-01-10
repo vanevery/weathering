@@ -24,6 +24,7 @@
         <script type="text/javascript" src="cordova.js"></script>
         <script type="text/javascript">
 
+        	var LOCATIONS_JSON = "http://www.walking-productions.com/weathering/assets/weathering.json";
 
         	var MAX_DISTANCE = .050; // KM  .1 is 100 meters
 
@@ -35,6 +36,23 @@
         	var diffLng = 0;
         	var currentLat = 0;
 			var currentLng = 0;
+
+			var locations = [];
+/*
+			[
+			
+
+				{lat: 42.338853, lng: -71.096248, label: "Richardson Bridge metal plate VG", audio: "audio/atmos1.mp3", bounds: [{lat: 42.338602, lng: -71.098183}, {lat: 42.338285, lng: -71.097518}, {lat: 42.338689, lng: -71.097207}, {lat: 42.338998, lng: -71.097636}, {lat: 42.339006, lng: -71.097926}], volume: 0, fadein: false, fadeout: false, fadeintime: 2000, fadeouttime: 3000, fadeTimeout: null},
+
+				{lat: 42.345762, lng: -71.093623, label: "Huge Willow Tree VG", audio: "audio/atmos2.mp3", bounds: [{lat: 42.345991, lng: -71.093578}, {lat: 42.345773, lng: -71.093229}, {lat: 42.345582, lng: -71.093449}, {lat: 42.345783, lng: -71.093787}], volume: 0, fadein: false, fadeout: false, fadeintime: 2000, fadeouttime: 3000, fadeTimeout: null},
+
+				{lat: 42.345653, lng: -71.093658, label: "Huge Oak Tree VG", audio: "audio/FENE-40_01.mp3", bounds: [{lat: 42.345683, lng: -71.0939}, {lat: 42.345842, lng: -71.093726}, {lat: 42.345636, lng: -71.093382}, {lat: 42.345489, lng: -71.093591}], volume: 0, fadein: false, fadeout: false, fadeintime: 2000, fadeouttime: 3000, fadeTimeout: null},
+
+				{lat: 42.345610, lng: -71.093169, label: "Elm Bark Beetle Map VG", audio: "audio/story1.mp3", bounds: [{lat: 42.345808, lng: -71.09328}, {lat: 42.345675, lng: -71.093449}, {lat: 42.345555, lng: -71.09328}, {lat: 42.345697, lng: -71.093101}], volume: 0, fadein: false, fadeout: false, fadeintime: 2000, fadeouttime: 3000, fadeTimeout: null},
+
+				{lat: 42.345772, lng: -71.093009, label: "Dawn Redwood", audio: "audio/story2.mp3", bounds: [{lat: 42.345862, lng: -71.093017}, {lat: 42.345699, lng: -71.093229}, {lat: 42.345551, lng: -71.09302}, {lat: 42.345711, lng: -71.092808}], volume: 0, fadein: false, fadeout: false, fadeintime: 2000, fadeouttime: 3000, fadeTimeout: null}
+			];
+*/
 
 			var map, marker;
 			function initMap() {
@@ -185,41 +203,6 @@
 				}        		
         	}
 
-			var locations = [
-
-				{lat: 42.338853, lng: -71.096248, label: "Richardson Bridge metal plate VG", audio: "audio/atmos1.mp3", bounds: [{lat: 42.338602, lng: -71.098183}, {lat: 42.338285, lng: -71.097518}, {lat: 42.338689, lng: -71.097207}, {lat: 42.338998, lng: -71.097636}, {lat: 42.339006, lng: -71.097926}], volume: 0, fadein: false, fadeout: false, fadeintime: 2000, fadeouttime: 3000, fadeTimeout: null},
-
-				/*{lat: 42.346367, lng: -71.093021, label: "Richardson Bridge metal plate VG", audio: "audio/atmos1.mp3", bounds: [{lat: 42.346464, lng: -71.093055}, {lat: 42.346227, lng: -71.092669}, {lat: 42.346056, lng: -71.092889}, {lat: 42.34629, lng: -71.093259}], volume: 0, fadein: false; fadeout: false, fadeintime: 2000, fadeouttime: 3000, fadeTimeout: null},*/
-
-				{lat: 42.345762, lng: -71.093623, label: "Huge Willow Tree VG", audio: "audio/atmos2.mp3", bounds: [{lat: 42.345991, lng: -71.093578}, {lat: 42.345773, lng: -71.093229}, {lat: 42.345582, lng: -71.093449}, {lat: 42.345783, lng: -71.093787}], volume: 0, fadein: false, fadeout: false, fadeintime: 2000, fadeouttime: 3000, fadeTimeout: null},
-
-				{lat: 42.345653, lng: -71.093658, label: "Huge Oak Tree VG", audio: "audio/FENE-40_01.mp3", bounds: [{lat: 42.345683, lng: -71.0939}, {lat: 42.345842, lng: -71.093726}, {lat: 42.345636, lng: -71.093382}, {lat: 42.345489, lng: -71.093591}], volume: 0, fadein: false, fadeout: false, fadeintime: 2000, fadeouttime: 3000, fadeTimeout: null},
-
-				{lat: 42.345610, lng: -71.093169, label: "Elm Bark Beetle Map VG", audio: "audio/story1.mp3", bounds: [{lat: 42.345808, lng: -71.09328}, {lat: 42.345675, lng: -71.093449}, {lat: 42.345555, lng: -71.09328}, {lat: 42.345697, lng: -71.093101}], volume: 0, fadein: false, fadeout: false, fadeintime: 2000, fadeouttime: 3000, fadeTimeout: null},
-
-				{lat: 42.345772, lng: -71.093009, label: "Dawn Redwood", audio: "audio/story2.mp3", bounds: [{lat: 42.345862, lng: -71.093017}, {lat: 42.345699, lng: -71.093229}, {lat: 42.345551, lng: -71.09302}, {lat: 42.345711, lng: -71.092808}], volume: 0, fadein: false, fadeout: false, fadeintime: 2000, fadeouttime: 3000, fadeTimeout: null}
-
-				/*
-				{lat: 42.340324, lon: -71.099859, label: "Culverted Mouth of Muddy River", audio: "audio/atmos1.mp3"},
-
-				{lat: 42.341900, lon: -71.094911, label: "Rose Garden", audio: "audio/atmos2.mp3"},
-
-				{lat: 42.341521, lon: -71.094150, label: "Flock of Students", audio: "audio/FENE-40_01.mp3"},
-
-				{lat: 42.345078, lon: -71.094128, label: "Old ISGM plot in Victory Garden", audio: "audio/story1.mp3"},
-
-				{lat: 42.345219, lon: -71.093934, label: "New ISGM plot in Victory Garden", audio: "audio/story2.mp3"},
-
-				{lat: 42.344838, lon: -71.092401, label: "Japanese Knotweed / Phragmites", audio: "audio/atmos1.mp3"},
-
-				{lat: 42.345664, lon: -71.092656, label: "Jin / Victory Garden", audio: "audio/atmos2.mp3"},
-
-				{lat: 42.345759, lon: -71.092820, label: "Jin / Victory Garden 3", audio: "audio/FENE-40_01.mp3"},
-
-				{lat: 42.345833, lon: -71.092896, label: "Bonnie / Victory Garden", audio: "audio/story1.mp3"}
-				*/
-			];
-
 			function inside(point, vs) {
 			    var inside = false;
 			    var y = point.lat;
@@ -255,7 +238,7 @@
         	var count = 0;
 			function locationWatchPositionCallback(currentPosition) 
             {
-           		log("locationWatchPositionCallback"+count);           		
+           		//log("locationWatchPositionCallback"+count);           		
            		count++;
 
             	currentLat = currentPosition.coords.latitude;
@@ -294,6 +277,20 @@
 					5000); 	          
             }
 
+            function loadLocations(completeCallback) {
+				//http://www.sitepoint.com/guide-vanilla-ajax-without-jquery/
+				var oReq = new XMLHttpRequest();
+				oReq.onload = function (e) {
+					console.log(e.target.response);
+				    locations = JSON.parse(e.target.response);
+				    console.log(locations);
+				    completeCallback();
+				};
+				oReq.open('GET', LOCATIONS_JSON + '?' + new Date().getTime(), true);
+				//oReq.responseType = 'json';
+				oReq.send();				
+            }
+
 			function onWindowLoad() {
 				document.addEventListener('deviceready', onDeviceReady);
 			}
@@ -301,48 +298,62 @@
 			function onDeviceReady() {
 				log("onDeviceReady");
 
-				// Should switch to foreach
-				function createPreloadSuccessCallback(closed_i) {
-					return function(message) {
-						log("Preload " + closed_i + " " + message);
+				// Load Locations
+				loadLocations(
+					function() {
 
-						window.plugins.NativeAudio.loop(closed_i,
-							function(message) {
-								log(message);
-							}, 
-							function(error){
-								log(error);
-							}
-						);
-					};
-				}
+						// Should switch to foreach
+						function createPreloadSuccessCallback(closed_i) {
+							return function(message) {
+								log("Preload " + closed_i + " " + message);
 
-				for (var i = 0; i < locations.length; i++) {
-
-					window.plugins.NativeAudio.preloadComplex(i, 
-						locations[i].audio, 0.0, 1, 0, 
-						createPreloadSuccessCallback(i), 
-						function(error){
-							log(error);
+								window.plugins.NativeAudio.loop(closed_i,
+									function(message) {
+										log(message);
+									}, 
+									function(error){
+										log(error);
+									}
+								);
+							};
 						}
-					);
-					
-					var div = document.createElement("div");
-					div.setAttribute("id","location"+i);
-					document.getElementById("locations").appendChild(div);
-				}				
 
-                if (navigator.geolocation) 
-                {
-                	log("navigator.geolocation");
+						for (var i = 0; i < locations.length; i++) {
 
-					navigator.geolocation.getCurrentPosition(locationWatchPositionCallback, locationWatchPositionErrorCallback, 
-                		{ maximumAge: 3000, timeout: 3000, enableHighAccuracy: true });
-                    
-                }
-		
-		
+							/*
+							window.plugins.NativeAudio.preloadComplex(i, 
+								locations[i].audio, 0.0, 1, 0, 
+								createPreloadSuccessCallback(i), 
+								function(error){
+									log(error);
+								}
+							);
+							*/
 
+							window.plugins.NativeAudio.preloadComplex(i, 
+								locations[i].audio, 0.0, 1, 0, 
+								createPreloadSuccessCallback(i), 
+								function(error){
+									log(error);
+								}
+							);
+							
+							var div = document.createElement("div");
+							div.setAttribute("id","location"+i);
+							document.getElementById("locations").appendChild(div);
+						}				
+
+		                if (navigator.geolocation) 
+		                {
+		                	log("navigator.geolocation");
+
+							navigator.geolocation.getCurrentPosition(locationWatchPositionCallback, locationWatchPositionErrorCallback, 
+		                		{ maximumAge: 3000, timeout: 3000, enableHighAccuracy: true });
+		                    
+		                }
+
+					}
+				);
 			}
 	
 			window.addEventListener('load', onWindowLoad);
