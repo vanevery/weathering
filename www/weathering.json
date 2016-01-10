@@ -1,0 +1,11 @@
+[
+{"lat": 42.338853, "lng": -71.096248, "label": "Richardson Bridge metal plate VG", "audio": "audio/1.mp3", "bounds": [{"lat": 42.338602, "lng": -71.098183}, {"lat": 42.338285, "lng": -71.097518}, {"lat": 42.338689, "lng": -71.097207}, {"lat": 42.338998, "lng": -71.097636}, {"lat": 42.339006, "lng": -71.097926}], "volume": 0, "fadein": false, "fadeout": false, "fadeintime": 2000, "fadeouttime": 3000, "fadeTimeout": null},
+
+{"lat": 42.345762, "lng": -71.093623, "label": "Huge Willow Tree VG", "audio": "audio/2.mp3", "bounds": [{"lat": 42.345991, "lng": -71.093578}, {"lat": 42.345773, "lng": -71.093229}, {"lat": 42.345582, "lng": -71.093449}, {"lat": 42.345783, "lng": -71.093787}], "volume": 0, "fadein": false, "fadeout": false, "fadeintime": 2000, "fadeouttime": 3000, "fadeTimeout": null},
+
+{"lat": 42.345653, "lng": -71.093658, "label": "Huge Oak Tree VG", "audio": "audio/3.mp3", "bounds": [{"lat": 42.345683, "lng": -71.0939}, {"lat": 42.345842, "lng": -71.093726}, {"lat": 42.345636, "lng": -71.093382}, {"lat": 42.345489, "lng": -71.093591}], "volume": 0, "fadein": false, "fadeout": false, "fadeintime": 2000, "fadeouttime": 3000, "fadeTimeout": null},
+
+{"lat": 42.345610, "lng": -71.093169, "label": "Elm Bark Beetle Map VG", "audio": "audio/4.mp3", "bounds": [{"lat": 42.345808, "lng": -71.09328}, {"lat": 42.345675, "lng": -71.093449}, {"lat": 42.345555, "lng": -71.09328}, {"lat": 42.345697, "lng": -71.093101}], "volume": 0, "fadein": false, "fadeout": false, "fadeintime": 2000, "fadeouttime": 3000, "fadeTimeout": null},
+
+{"lat": 42.345772, "lng": -71.093009, "label": "Dawn Redwood", "audio": "audio/5.mp3", "bounds": [{"lat": 42.345862, "lng": -71.093017}, {"lat": 42.345699, "lng": -71.093229}, {"lat": 42.345551, "lng": -71.09302}, {"lat": 42.345711, "lng": -71.092808}], "volume": 0, "fadein": false, "fadeout": false, "fadeintime": 2000, "fadeouttime": 3000, "fadeTimeout": null}
+]
