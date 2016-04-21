@@ -107,51 +107,6 @@
          	          console.log(e);
                    }
                 }
-		
-		/*
-		if( window.plugins && window.plugins.NativeAudio ) {
-
-    			// Preload audio resources
-    			window.plugins.NativeAudio.preloadComplex('music', 'audio/music.mp3', 1, 1, 0, 
-				function(msg){
-					console.log('success: ' + msg);
-
-    			 		window.plugins.NativeAudio.play('music',
-						function (msg) {
-							console.log('play success ' + msg);
-						}, 
-						function (msg) {
-							console.log('play error ' + msg);
-						}
-			 		);
-    				},
-
-				function(msg) {
-        				console.log('error: ' + msg );
-    				}
-			);
-
-    			window.plugins.NativeAudio.preloadSimple( 'click', 'audio/other.mp3', function(msg){
-    				}, function(msg){
-        				console.log( 'error: ' + msg );
-    				}
-			);
-
-
-    			// Play
-    			//window.plugins.NativeAudio.play( 'click' );
-
-    			// Stop multichannel clip after 60 seconds
-    			window.setTimeout( function(){
-
-        			window.plugins.NativeAudio.stop( 'music' );
-        			window.plugins.NativeAudio.unload( 'music' );
-        			window.plugins.NativeAudio.unload( 'click' );
-
-    			}, 1000 * 60 );
-		}
-		*/
-
 			}
 	
 			window.addEventListener('load', onWindowLoad);
