@@ -1,0 +1,21 @@
+{
+   "background_color": "#ffffff",
+   "name": "Weathering",
+   "short_name": "weathering",
+   "xwalk_app_version": "0.1",
+   "start_url": "crosswalk.html",
+   "xwalk_package_id": "com.mobvcasting.weathering",
+   "icons": [
+     {
+         "src": "icon.png",
+         "sizes": "72x72"
+     }
+   ],
+   "xwalk_permissions": [
+    "Geolocation"
+  ],
+  "xwalk_android_permissions": [
+    "MODIFY_AUDIO_SETTINGS",
+    "ACCESS_FINE_LOCATION"
+  ]   
+}
