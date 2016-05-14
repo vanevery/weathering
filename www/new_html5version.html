@@ -18,8 +18,8 @@
         	//var MAX_DISTANCE = .050; // KM  .1 is 100 meters
         	var FADE_INTERVAL = 200; // milliseconds
 
-        	var latCenter = 42.340656;
-        	var lngCenter = -71.097931;
+        	var latCenter = 42.337993;
+        	var lngCenter = -71.098498;
         	var diffLat = 0;
         	var diffLng = 0;
         	var currentLat = 0;
@@ -49,7 +49,7 @@
 				log("displayLocations");
 				if (map) {
 					for (var i = 0; i < locations.length; i++) {
-						log(locations[i]);
+						//log(locations[i]);
 						if (locations[i].type == "region") {
 							var polygon = new google.maps.Polygon({
 								paths: locations[i].bounds,
@@ -124,6 +124,18 @@
 							}, locations[i].speed,locations[i]);
 
 						
+						} else if (locations[i].type == "point") {
+							var locmarker = new google.maps.Marker({
+								position: {lat: locations[i].lat, lng: locations[i].lng},
+								map: map,
+								title: locations[i].label,
+								icon: {
+									  path: google.maps.SymbolPath.CIRCLE,
+									  scale: 5,
+									  strokeColor:"#B40404"
+								}								
+							});		
+							locations[i].marker = locmarker;						
 						}
 					}			
 				}
@@ -263,21 +275,38 @@
         	function update(pos) {
 				for (var i = 0; i < locations.length; i++) {
 					if (locations[i].type == "region") {
+						// Inside region
 						if (inside(pos, locations[i].bounds)) {
-							if (locations[i].volume != 1 && locations[i].fadein == false) {
-								fadeIn(i);
+							// Were they already inside
+							if (!locations[i].within) {
+								locations[i].within = true;
+								// Check probability
+								if (Math.random()*100 <= locations[i].probability) {												
+									if (locations[i].volume != 1 && locations[i].fadein == false) {
+										fadeIn(i);
+									}
+								}
 							}
 						} else {
+							locations[i].within = false;
 							if (locations[i].volume != 0 && locations[i].fadeout == false) {
 								fadeOut(i);
 							}
 						}
-					} else if (locations[i].type == "algopath" || locations[i].type == "path") {
+					} else if (locations[i].type == "algopath" || locations[i].type == "path" || locations[i].type == "point") {
 						if (inrange(pos, locations[i])) {
-							if (locations[i].volume != 1 && locations[i].fadein == false) {
-								fadeIn(i);
+							// Were they already inside
+							if (!locations[i].within) {
+								locations[i].within = true;
+								// Check probability
+								if (Math.random()*100 <= locations[i].probability) {																		
+									if (locations[i].volume != 1 && locations[i].fadein == false) {
+										fadeIn(i);
+									}
+								}
 							}
 						} else {
+							locations[i].within = false;
 							if (locations[i].volume != 0 && locations[i].fadeout == false) {
 								fadeOut(i);
 							}
@@ -373,9 +402,9 @@
             function loadLocations(completeCallback) {
 				var oReq = new XMLHttpRequest();
 				oReq.onload = function (e) {
-					console.log(e.target.response);
+					//console.log(e.target.response);
 				    locations = JSON.parse(e.target.response);
-				    console.log(locations);
+				    //console.log(locations);
 				    completeCallback();
 				};
 				oReq.open('GET', LOCATIONS_JSON + '?' + new Date().getTime(), true);
@@ -399,11 +428,21 @@
 						// If the map is already loaded
 						displayLocations();
 
+// 						var newlocations = [];
+// 						for (var i = 0; i < locations.length; i++) {
+// 							// Check probability:
+// 							if (Math.random()*100 <= locations[i].probability) {
+// 								newlocations.push(locations[i]);
+// 							}
+// 						}
+// 						locations = newlocations;
+						
 						// Load Audio Files
 						for (var i = 0; i < locations.length; i++) {
 							
 							var div = document.createElement("div");
 							div.setAttribute("id","location"+i);
+							//div.innerHTML = locations[i].label;
 							document.getElementById("locations").appendChild(div);
 							
 							var audio = document.createElement("audio");
@@ -427,7 +466,7 @@
 		                	log("navigator.geolocation");
 
 							navigator.geolocation.getCurrentPosition(locationWatchPositionCallback, locationWatchPositionErrorCallback, 
-		                		{ maximumAge: 3000, timeout: 3000, enableHighAccuracy: true });
+		                		{ maximumAge: 2000, timeout: 3000, enableHighAccuracy: true });
 		                }
 					}
 				);
