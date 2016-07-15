@@ -17,5 +17,6 @@
   "xwalk_android_permissions": [
     "MODIFY_AUDIO_SETTINGS",
     "ACCESS_FINE_LOCATION"
-  ]   
+  ],
+  "xwalk_command_line": "--enable-unified-media-pipeline"
 }
