@@ -50,6 +50,17 @@
 				if (map) {
 					for (var i = 0; i < locations.length; i++) {
 						//log(locations[i]);
+
+						if (!locations[i].hasOwnProperty("probability")) {
+							console.log("Doesn't have probability, adding it");
+							locations[i].probability = 100;
+						}
+						
+						if (!locations[i].hasOwnProperty("within")) {
+							console.log("Doesn't have within, adding it");
+							locations[i].within = false;
+						}
+					
 						if (locations[i].type == "region") {
 							var polygon = new google.maps.Polygon({
 								paths: locations[i].bounds,
@@ -152,6 +163,30 @@
 
         		log(diffLat + " " + diffLng);
     	    }
+    	    
+    	    function up() {
+    	    	diffLat += 0.0001;
+    	    	
+				log(diffLat + " " + diffLng);
+    	    }
+    	    
+    	    function down() {
+    	    	diffLat -= 0.0001;
+    	    	
+        		log(diffLat + " " + diffLng);    	    	
+    	    }
+    	    
+    	    function right() {
+    	    	diffLng += 0.0001;
+    	    	
+				log(diffLat + " " + diffLng);
+    	    }
+    	    
+    	    function left() {
+    	    	diffLat -= 0.0001;
+    	    	
+        		log(diffLat + " " + diffLng);
+    	    }
         			
         	/*
         	function changeDistance(dist) {
@@ -215,14 +250,16 @@
 			}
 
 			function fadeIn(index) {
-			
+				console.log(locations[index].element.readyState + " " + locations[index].element.paused);
+				
+				
 				if (locations[index].element.readyState == 4
 					&& locations[index].element.paused) {
 					locations[index].element.play();
-					//console.log(index + " play");
+					console.log(index + " play");
 	
 				} else {
-					//console.log(index + " " + locations[index].element.readyState);
+					console.log(index + " " + locations[index].element.readyState);
 				}
 
 				// If we have a fadeout going on, cancel it
@@ -275,8 +312,10 @@
         	function update(pos) {
 				for (var i = 0; i < locations.length; i++) {
 					if (locations[i].type == "region") {
+						console.log("Checking region" + i);
 						// Inside region
 						if (inside(pos, locations[i].bounds)) {
+							console.log("in");
 							// Were they already inside
 							if (!locations[i].within) {
 								locations[i].within = true;
@@ -286,8 +325,11 @@
 										fadeIn(i);
 									}
 								}
+							} else {
+								
 							}
 						} else {
+							console.log("out");
 							locations[i].within = false;
 							if (locations[i].volume != 0 && locations[i].fadeout == false) {
 								fadeOut(i);
@@ -498,12 +540,13 @@
     <body>
         <div>
             <h1>Weathering</h1>
-            <div id="startdiv"><input type="button" id="start" value="Start"></div>
+            <div id="startdiv">Click first: <input type="button" id="start" value="Start"></div>
 		    <div id="map"></div>
 			<div id="locations"></div>		    
-			<div id="currentLocation"></div>
+			<div>Current Location: <div id="currentLocation"></div></div>
 			<br /><br />
-			<button id="center" onclick="recenter();">Recenter</button>
+			<div>Walk around virtually: <button id="up" onclick="up();">Up</button> <button id="down" onclick="down();">Down</button> <button id="left" onclick="left();">Left</button> <button id="right" onclick="right();">Right</button>
+			<div><button id="center" onclick="recenter();">Recenter</button> (Only click if you are testing off-site)</div>
 			<div id="log"></div>
         </div>
     </body>
