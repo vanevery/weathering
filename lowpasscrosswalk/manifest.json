@@ -1,0 +1,22 @@
+{
+   "background_color": "#ffffff",
+   "name": "Lowpass Weathering",
+   "short_name": "lpweathering",
+   "xwalk_app_version": "0.1",
+   "start_url": "lowpass.html",
+   "xwalk_package_id": "com.mobvcasting.lpweathering",
+   "icons": [
+     {
+         "src": "icon.png",
+         "sizes": "72x72"
+     }
+   ],
+   "xwalk_permissions": [
+    "Geolocation"
+  ],
+  "xwalk_android_permissions": [
+    "MODIFY_AUDIO_SETTINGS",
+    "ACCESS_FINE_LOCATION"
+  ],
+  "xwalk_command_line": "--enable-unified-media-pipeline"
+}

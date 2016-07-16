@@ -1,0 +1,68 @@
+The JSON file defines how audio files exist in relation to physical space.  
+
+The JSON file file should be an array (with a starting "[" and an ending "]" of JSON defined objects defined with a starting "{" and an ending "}"
+
+	[
+	{...},
+	{...},
+	{...},
+	]
+
+All objects have a set of properties in common:
+
+	"lat": is the starting latitude
+	"lon": is the starting longitude
+	"label": is the name of the region
+	"audio": is a URL to an audio file to play
+	"volume": is the starting volume
+	"fadeintime": time in milliseconds to fade in
+	"fadeouttime": time in milliseconds to fade out
+	"probability": the probability that an audio file will be triggered to play (0 to 100)
+		
+	{"lat": 42.338879, "lng": -71.097781, "label": "label", "audio": "http://server/path/to/audio.mp3", "volume": 0, "fadeintime": 1000, "fadeouttime": 1000, "probability": 100},
+
+		
+Additionally there are several different "types" of objects which is required.
+
+region
+
+	The first a "region" has a an array of latitude and longitude "bounds" that define a polygon within which an audio file will play:
+
+	{"type": "region", "lat": 42.341813, "lng": -71.095947, "label": "Region 1", "audio": "http://server/path/to/audio.mp3", "bounds": [{"lat": 42.340275, "lng": -71.100039}, {"lat": 42.339799, "lng": -71.100597}, {"lat": 42.338356, "lng": -71.09798}], "volume": 0, "fadein": false, "fadeout": false, "fadeintime": 1000, "fadeouttime": 1000, "fadeTimeout": null}
+
+
+point
+
+	A point is a single point with a "maxdistance" or radius in kilometers
+	
+	{"type": "point", "lat": 42.338879, "lng": -71.097781, "maxdistance": ".01", "label": "label", "audio": "http://server/path/to/audio.mp3", "volume": 0, "fadeintime": 1000, "fadeouttime": 1000, "probability": 100}
+
+
+path
+
+	A path defines a moving point with a "path" that is an array of individual "lat", "lng" points that defines the path and a "speed" which determines how long it takes to move from point to point in milliseconds.
+	
+	(Note: At the moment the point is not interpolated between points, rather it jumps from one coordinate to the next at the "speed".)
+	
+	{"type": "path", "probability": 100, "maxdistance": ".01", "speed": 10000, "lat":42.340656, "lng":-71.097931, "label": "Label", "audio": "http://server/path/to/audio.mp3", "path": [ {"lat":42.340656,"lng":-71.097931} , {"lat":42.340775,"lng":-71.097776} , {"lat":42.340882,"lng":-71.097647}], "volume": 0, "fadeintime": 250, "fadeouttime": 250}
+
+
+algopath
+
+	An algopath defines a path but instead of fixed points there is a "lat_formula" and a "lng_formula" to define the position.  These formulas are written in JavaScript.
+	
+	{"type": "algopath", "probability": 100, "maxdistance": ".01", "speed": 1000, "lat_formula": "42.340656", "lng_formula": "-71.097931 + (0.000017 * (new Date().getSeconds()))", "lat": 42.340656, "lng": -71.097931, "label": "Label", "audio": "http://server/path/to/audio.mp3", "volume": 0, "fadeintime": 250, "fadeouttime": 250}
+
+
+Here is what a complete JSON file would look like:
+
+[
+	{"type": "region", "lat": 42.341813, "lng": -71.095947, "label": "Region 1", "audio": "http://server/path/to/audio.mp3", "bounds": [{"lat": 42.340275, "lng": -71.100039}, {"lat": 42.339799, "lng": -71.100597}, {"lat": 42.338356, "lng": -71.09798}], "volume": 0, "fadein": false, "fadeout": false, "fadeintime": 1000, "fadeouttime": 1000, "fadeTimeout": null},
+	{"type": "region", "lat": 42.341890, "lng": -71.095947, "label": "Region 1", "audio": "http://server/path/to/audio.mp3", "bounds": [{"lat": 42.340275, "lng": -71.100039}, {"lat": 42.339799, "lng": -71.100597}, {"lat": 42.338356, "lng": -71.09798}], "volume": 0, "fadein": false, "fadeout": false, "fadeintime": 1000, "fadeouttime": 1000, "fadeTimeout": null},
+	{"type": "path", "probability": 100, "maxdistance": ".01", "speed": 10000, "lat":42.340656, "lng":-71.097931, "label": "Label", "audio": "http://server/path/to/audio.mp3", "path": [ {"lat":42.340656,"lng":-71.097931} , {"lat":42.340775,"lng":-71.097776} , {"lat":42.340882,"lng":-71.097647}], "volume": 0, "fadeintime": 250, "fadeouttime": 250},
+	{"type": "algopath", "probability": 50, "maxdistance": ".01", "speed": 1000, "lat_formula": "42.340656", "lng_formula": "-71.097931 + (0.000017 * (new Date().getSeconds()))", "lat": 42.340656, "lng": -71.097931, "label": "Label", "audio": "http://server/path/to/audio.mp3", "volume": 0, "fadeintime": 250, "fadeouttime": 250},
+	{"type": "point", "lat": 42.338890, "lng": -71.097781, "maxdistance": ".01", "label": "label", "audio": "http://server/path/to/audio.mp3", "volume": 0, "fadeintime": 1000, "fadeouttime": 1000, "probability": 100},
+	{"type": "point", "lat": 42.338879, "lng": -71.097781, "maxdistance": ".01", "label": "label", "audio": "http://server/path/to/audio.mp3", "volume": 0, "fadeintime": 1000, "fadeouttime": 1000, "probability": 100}
+]
+
+It's always a good idea to make sure the JSON is valid by running it through a validator such as http://jsonlint.com/

@@ -1,0 +1,53 @@
+<html>
+	<head>
+		<script type="text/javascript">
+	var audioContext = null;
+		var audiotoload = null;
+			var audioSource = null;
+			var lowpassNode = null;
+			
+window.addEventListener('load', function() {
+audioContext = new AudioContext();
+ audiotoload = document.getElementById("audiotoplay");	
+ audioSource = audioContext.createMediaElementSource(audiotoload); // No longer playable by the normal audio tag
+
+lowpassNode = audioContext.createBiquadFilter();
+	lowpassNode.type = "lowpass";
+	lowpassNode.frequency.value = 10;
+	lowpassNode.gain.value = 100;
+
+	audioSource.connect(lowpassNode);
+	lowpassNode.connect(audioContext.destination);
+	
+	document.getElementById("start").addEventListener('click', function() {
+		audiotoload.play();
+		// var interval = setInterval(function() {
+// 			lowpassNode.frequency.value += (4000 - 440)/30;
+// 			console.log(lowpassNode.frequency.value);
+// 			if (lowpassNode.frequency.value >= 4000) {
+// 				clearInterval(interval);
+// 			}
+// 		}, 1000);
+	});
+	
+	document.getElementById("frequency").addEventListener('change', function() {
+		lowpassNode.frequency.value = document.getElementById("frequency").value;
+		document.getElementById("frequencyValue").innerHTML = lowpassNode.frequency.value;
+	});
+	
+});
+
+		</script>
+	</head>
+	<body>
+<!-- 
+	<audio src="rain.mp3" id="audiotoplay" controls></audio><br />
+ -->
+	
+	<audio src="rain.ogg" id="audiotoplay" controls></audio><br />
+	<input type="button" value="start" id="start"><br />
+	<label for="frequency">Lowpass Frequency Value</label><br />
+	<input type="range" id="frequency" min="0" value="440" max="25000" step="50"><br />
+	<div id="frequencyValue">440</div>
+	</body>
+</html>
