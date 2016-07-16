@@ -51,6 +51,21 @@
 					for (var i = 0; i < locations.length; i++) {
 						//log(locations[i]);
 
+						if (!locations[i].hasOwnProperty("fadein")) {
+							console.log("Doesn't have fadein, adding it");
+							locations[i].fadein = false;
+						}
+
+						if (!locations[i].hasOwnProperty("fadeout")) {
+							console.log("Doesn't have fadeout, adding it");
+							locations[i].fadeout = false;
+						}
+						
+						if (!locations[i].hasOwnProperty("fadeTimeout")) {
+							console.log("Doesn't have fadeTimeout, adding it");
+							locations[i].fadeTimeout = null;
+						}
+						
 						if (!locations[i].hasOwnProperty("probability")) {
 							console.log("Doesn't have probability, adding it");
 							locations[i].probability = 100;
