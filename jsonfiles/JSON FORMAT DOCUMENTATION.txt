@@ -10,14 +10,18 @@ The JSON file file should be an array (with a starting "[" and an ending "]" of 
 
 All objects have a set of properties in common:
 
-	"lat": is the starting latitude
-	"lon": is the starting longitude
-	"label": is the name of the region
-	"audio": is a URL to an audio file to play
-	"volume": is the starting volume
-	"fadeintime": time in milliseconds to fade in
-	"fadeouttime": time in milliseconds to fade out
-	"probability": the probability that an audio file will be triggered to play (0 to 100)
+	"lat": 42.338879 is the starting latitude
+	"lon": -71.097781 is the starting longitude
+	"label": "region name" is the name of the region
+	"audio": "https://server/path/to/audio.mp3" is a URL to an audio file to play, should be https
+	"volume": 0-1 is the starting volume
+	"fadeintime": 0-10000 time in milliseconds to fade in
+	"fadeouttime": 0-10000 time in milliseconds to fade out
+	"probability": 0-100 the probability that an audio file will be triggered to play (0 to 100)	
+	"distancefade": true/false this tells the software to do a fade based on distance rather than time - only works on points or things with points, path and algopath - currently doesn't interoperate with probabilities.
+	"fadetype": "volume", "lowpass"  the type of fade in and fade out to do
+	"frequencymin": 0-32000 for a lowpass filter, the minimum value
+	"frequencymax": 0-32000  for a lowpass filter, the max value
 		
 	{"lat": 42.338879, "lng": -71.097781, "label": "label", "audio": "http://server/path/to/audio.mp3", "volume": 0, "fadeintime": 1000, "fadeouttime": 1000, "probability": 100},
 
@@ -36,7 +40,6 @@ point
 	A point is a single point with a "maxdistance" or radius in kilometers
 	
 	{"type": "point", "lat": 42.338879, "lng": -71.097781, "maxdistance": ".01", "label": "label", "audio": "http://server/path/to/audio.mp3", "volume": 0, "fadeintime": 1000, "fadeouttime": 1000, "probability": 100}
-
 
 path
 
