@@ -15,17 +15,18 @@
         <script type="text/javascript">
 
         	var LOCATIONS_JSON = "https://www.walking-productions.com/weathering/assets/weathering_web.json";
-        	//var MAX_DISTANCE = .050; // KM  .1 is 100 meters
         	var FADE_INTERVAL = 200; // milliseconds
 
-        	var latCenter = 42.337993;
-        	var lngCenter = -71.098498;
+        	var latCenter = 42.3409609;
+        	var lngCenter = -71.09505250000001;
         	var diffLat = 0;
         	var diffLng = 0;
         	var currentLat = 0;
 			var currentLng = 0;
 
 			var locations = [];
+			
+			var audioContext = null;
 			
 			var map, marker;
 			function initMap() {
@@ -50,6 +51,21 @@
 				if (map) {
 					for (var i = 0; i < locations.length; i++) {
 						//log(locations[i]);
+
+						if (!locations[i].hasOwnProperty("fadetype")) {
+							console.log("Doesn't have fadetype, adding it");
+							locations[i].fadetype = "volume";
+						}
+
+						if (!locations[i].hasOwnProperty("frequencymin")) {
+							console.log("Doesn't have frequencymin, adding it");
+							locations[i].frequencymin = 0;
+						}
+
+						if (!locations[i].hasOwnProperty("frequencymax")) {
+							console.log("Doesn't have frequencymax, adding it");
+							locations[i].frequencymax = 32768;
+						}
 
 						if (!locations[i].hasOwnProperty("fadein")) {
 							console.log("Doesn't have fadein, adding it");
@@ -76,6 +92,11 @@
 							locations[i].within = false;
 						}
 					
+						if (!locations[i].hasOwnProperty("distancefade")) {
+							console.log("Doesn't have distancefade, adding it");
+							locations[i].distancefade = false;
+						}
+											
 						if (locations[i].type == "region") {
 							var polygon = new google.maps.Polygon({
 								paths: locations[i].bounds,
@@ -203,16 +224,6 @@
         		log(diffLat + " " + diffLng);
     	    }
         			
-        	/*
-        	function changeDistance(dist) {
-        		MAX_DISTANCE = dist;
-        		document.getElementById('dist').innerHTML = dist;
-        		log(MAX_DISTANCE);
-
-        		update();
-        	}	
-			*/
-
 			function fadeOut(index) {
 				// If we have a fadein going on, cancel it
 				if (locations[index].fadein) {
@@ -226,47 +237,82 @@
 				}
 				else
 				{
-					// If we are greater than 0 then we can do a fadeout
-					if (locations[index].volume > 0) {
+					if (locations[index].fadetype == "volume") {
+				
+						// If we are greater than 0 then we can do a fadeout
+						if (locations[index].volume > 0) {
 
-						log("fadeOut " + locations[index]);
+							log("fadeOut " + locations[index]);
 
-						// set fadeout to true so know what's up
-						locations[index].fadeout = true;
+							// set fadeout to true so know what's up
+							locations[index].fadeout = true;
 
-						// Lower the volume
-						locations[index].volume = locations[index].volume - FADE_INTERVAL/locations[index].fadeouttime;
-														//1/(location.fadeouttime/FADE_INTERVAL);
+							// Lower the volume
+							locations[index].volume = locations[index].volume - FADE_INTERVAL/locations[index].fadeouttime;
+															//1/(location.fadeouttime/FADE_INTERVAL);
 
-						if (locations[index].volume < 0) locations[index].volume = 0;
+							if (locations[index].volume < 0) locations[index].volume = 0;
 
-						// Set the timeout to actually do the volume lowering
-						var fadeTimeout = setTimeout(function() {
+							// Set the timeout to actually do the volume lowering
+							var fadeTimeout = setTimeout(function() {
 							
-							//window.plugins.NativeAudio.setVolumeForComplexAsset(index,locations[index].volume,	function(message){log(message);}, function(error){log(error);});
-							locations[index].element.volume = locations[index].volume;
+								//window.plugins.NativeAudio.setVolumeForComplexAsset(index,locations[index].volume,	function(message){log(message);}, function(error){log(error);});
+								locations[index].element.volume = locations[index].volume;
 														
-							// Call the fadeOut again	
-							fadeOut(index);
+								// Call the fadeOut again	
+								fadeOut(index);
 							
-							// After a set interval
-						},FADE_INTERVAL);
+								// After a set interval
+							},FADE_INTERVAL);
 
-						// Store the timeout object
-						locations[index].fadeTimeout = fadeTimeout;
-					} else {
-						// Otherwise we are done and we'll set fadeout to false
-						locations[index].fadeout = false;
+							// Store the timeout object
+							locations[index].fadeTimeout = fadeTimeout;
+						} else {
+							// Otherwise we are done and we'll set fadeout to false
+							locations[index].fadeout = false;
 						
-						// Pause it
-						locations[index].element.pause();
+							// Pause it
+							locations[index].element.pause();
+						}
+					} else if (locations[index].fadetype == "lowpass") {
+						
+						// If we are greater than min then we can do a fadeout
+						if (locations[index].node.frequency.value > locations[index].frequencymin) {
+
+							log("fadeOut " + locations[index]);
+
+							// set fadeout to true so know what's up
+							locations[index].fadeout = true;
+
+							// Lower the volume
+							locations[index].node.frequency.value = locations[index].node.frequency.value - FADE_INTERVAL/locations[index].fadeouttime * (locations[index].frequencymax - locations[index].frequencymin);
+
+							if (locations[index].node.frequency.value < locations[index].frequencymin) locations[index].node.frequency.value = locations[index].frequencymin;
+
+							// Set the timeout to actually do the volume lowering
+							var fadeTimeout = setTimeout(function() {
+																					
+								// Call the fadeOut again	
+								fadeOut(index);
+							
+								// After a set interval
+							},FADE_INTERVAL);
+
+							// Store the timeout object
+							locations[index].fadeTimeout = fadeTimeout;
+						} else {
+							// Otherwise we are done and we'll set fadeout to false
+							locations[index].fadeout = false;
+						
+							// Pause it
+							locations[index].element.pause();
+						}					
 					}
 				}
 			}
 
 			function fadeIn(index) {
 				console.log(locations[index].element.readyState + " " + locations[index].element.paused);
-				
 				
 				if (locations[index].element.readyState == 4
 					&& locations[index].element.paused) {
@@ -290,36 +336,74 @@
 				else
 				{
 					// If we don't have a fadeout going on, do a fade in
-
-					// If we are less than 1 then we can do a fadein
-					if (locations[index].volume < 1) {
-						log("fadeIn " + locations[index]);
-	
-						// set fadeout to true so know what's up
-						locations[index].fadein = true;
-
-						// Raise the volume
-						locations[index].volume = locations[index].volume + FADE_INTERVAL/locations[index].fadeintime;
-														//1/(location.fadeouttime/FADE_INTERVAL);
+					if (locations[index].fadetype == "lowpass") {
 						
-						if (locations[index].volume > 1) locations[index].volume = 1;
+						// Set the volume to 1
+						locations[index].element.volume = 1;
+						
+						console.log("fadetype is lowpass");
 
-						// Set the timeout to actually do the volume lowering
-						var fadeTimeout = setTimeout(function() {
-							
-							//window.plugins.NativeAudio.setVolumeForComplexAsset(index,locations[index].volume,	function(message){log(message);}, function(error){log(error);});
-							locations[index].element.volume = locations[index].volume;							
-							
-							// Call the fadeOut again	
-							fadeIn(index);
-							// After a set interval
-						},FADE_INTERVAL);
+						// If we are less than min then we can do a fadein
+						if (locations[index].node.frequency.value < locations[index].frequencymax) {
+							log("fadeIn " + locations[index]);
+	
+							// set fadeout to true so know what's up
+							locations[index].fadein = true;
 
-						// Store the timeout object
-						locations[index].fadeTimeout = fadeTimeout;
-					} else {
-						// Otherwise we are done and we'll set fadein to false
-						locations[index].fadein = false;
+							locations[index].node.frequency.value = locations[index].node.frequency.value + FADE_INTERVAL/locations[index].fadeintime * (locations[index].frequencymax - locations[index].frequencymin);
+															//1/(location.fadeouttime/FADE_INTERVAL);
+
+							log(locations[index].node.frequency.value);
+						
+							if (locations[index].node.frequency.value > locations[index].frequencymax) locations[index].node.frequency.value = locations[index].frequencymax;
+
+							// Set the timeout to actually do the volume lowering
+							var fadeTimeout = setTimeout(function() {
+														
+								// Call the fadeOut again	
+								fadeIn(index);
+								// After a set interval
+							},FADE_INTERVAL);
+
+							// Store the timeout object
+							locations[index].fadeTimeout = fadeTimeout;
+						} else {
+							// Otherwise we are done and we'll set fadein to false
+							locations[index].fadein = false;
+						}
+						
+					} else if (locations[index].fadetype == "volume") {
+
+						// If we are less than min then we can do a fadein
+						if (locations[index].volume < 1) {
+							log("fadeIn " + locations[index]);
+	
+							// set fadeout to true so know what's up
+							locations[index].fadein = true;
+
+							// Raise the volume
+							locations[index].volume = locations[index].volume + FADE_INTERVAL/locations[index].fadeintime;
+															//1/(location.fadeouttime/FADE_INTERVAL);
+						
+							if (locations[index].volume > 1) locations[index].volume = 1;
+
+							// Set the timeout to actually do the volume lowering
+							var fadeTimeout = setTimeout(function() {
+							
+								//window.plugins.NativeAudio.setVolumeForComplexAsset(index,locations[index].volume,	function(message){log(message);}, function(error){log(error);});
+								locations[index].element.volume = locations[index].volume;							
+							
+								// Call the fadeOut again	
+								fadeIn(index);
+								// After a set interval
+							},FADE_INTERVAL);
+
+							// Store the timeout object
+							locations[index].fadeTimeout = fadeTimeout;
+						} else {
+							// Otherwise we are done and we'll set fadein to false
+							locations[index].fadein = false;
+						}
 					}
 				}
 			}
@@ -333,10 +417,13 @@
 							console.log("in");
 							// Were they already inside
 							if (!locations[i].within) {
+								console.log("wasn't within previously");
 								locations[i].within = true;
 								// Check probability
 								if (Math.random()*100 <= locations[i].probability) {												
-									if (locations[i].volume != 1 && locations[i].fadein == false) {
+									console.log("within probability");								
+									if (locations[i].fadein == false) {
+										console.log("not currently fading in");
 										fadeIn(i);
 									}
 								}
@@ -346,26 +433,44 @@
 						} else {
 							console.log("out");
 							locations[i].within = false;
-							if (locations[i].volume != 0 && locations[i].fadeout == false) {
+							if (locations[i].fadeout == false) {
 								fadeOut(i);
 							}
 						}
 					} else if (locations[i].type == "algopath" || locations[i].type == "path" || locations[i].type == "point") {
 						if (inrange(pos, locations[i])) {
+							if (!locations[i].distancefade) {
 							// Were they already inside
 							if (!locations[i].within) {
 								locations[i].within = true;
 								// Check probability
 								if (Math.random()*100 <= locations[i].probability) {																		
-									if (locations[i].volume != 1 && locations[i].fadein == false) {
+										if (locations[i].fadein == false) {
 										fadeIn(i);
 									}
 								}
 							}
 						} else {
+								// Distance Fade
+								if (locations[i].element.readyState == 4
+									&& locations[i].element.paused) {
+									locations[i].element.play();
+									console.log(i + " play");
+									locations[i].element.volume = 1;
+								}
+								locations[i].node.frequency.value = (locations[i].maxdistance - geoDistance(pos.lat, pos.lng, locations[i].lat, locations[i].lng))/locations[i].maxdistance * (locations[i].frequencymax - locations[i].frequencymin) + locations[i].frequencymin;							
+								console.log(locations[i].node.frequency.value);
+							}
+						} else {
 							locations[i].within = false;
-							if (locations[i].volume != 0 && locations[i].fadeout == false) {
+							if (!locations[i].distancefade) {
+								if (locations[i].fadeout == false) {
 								fadeOut(i);
+							}
+							} else {
+								// Distance Fade
+								locations[i].node.frequency.value = locations[i].frequencymin;
+								locations[i].element.pause();
 							}
 						}
 					}
@@ -477,6 +582,8 @@
 			function onDeviceReady() {
 				log("onDeviceReady");
 
+				audioContext = new AudioContext();
+
 				// Load Locations
 				loadLocations(
 					function() {
@@ -516,6 +623,18 @@
 							div.appendChild(audio);
 							
 							document.getElementById("locations").appendChild(div);					
+							
+							if (locations[i].fadetype == "lowpass") {
+								locations[i].audioSource = audioContext.createMediaElementSource(locations[i].element);
+								locations[i].node = audioContext.createBiquadFilter();
+								locations[i].node.type = "lowpass";
+								locations[i].node.frequency.value = locations[i].frequencymin;
+								locations[i].node.gain.value = 100;
+								locations[i].audioSource.connect(locations[i].node);
+								locations[i].node.connect(audioContext.destination);
+								
+								locations[i].volume = 1;							
+							}											
 						}				
 
 		                if (navigator.geolocation) 
