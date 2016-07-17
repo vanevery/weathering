@@ -582,6 +582,7 @@
 			function onDeviceReady() {
 				log("onDeviceReady");
 
+				window.AudioContext = window.AudioContext || window.webkitAudioContext;
 				audioContext = new AudioContext();
 
 				// Load Locations
