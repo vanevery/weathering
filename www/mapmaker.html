@@ -59,6 +59,8 @@
       }
 
       function updateCurSelText(shape) {
+      	var jsonstr = "\"bounds\": [";
+      	
         posstr = "" + selectedShape.position;
         if (typeof selectedShape.position == 'object') {
           posstr = selectedShape.position.toUrlValue();
@@ -69,7 +71,14 @@
           for (var i = 0; i < selectedShape.getPath().getLength(); i++) {
             // .toUrlValue(5) limits number of decimals, default is 6 but can do more
             pathstr += selectedShape.getPath().getAt(i).toUrlValue() + " , ";
+            
+            console.log(selectedShape.getPath().getAt(i).lat());
+             if (i != 0) jsonstr += ",";
+             jsonstr += "{\"lat\": " + selectedShape.getPath().getAt(i).lat() + ", \"lng\": " + selectedShape.getPath().getAt(i).lng() + "}";
+             
+            
           }
+          jsonstr += "],";
           pathstr += "]";
         }
         bndstr = "" + selectedShape.getBounds;
@@ -87,7 +96,7 @@
         if (typeof selectedShape.getRadius == 'function') {
           radstr = "" + selectedShape.getRadius();
         }
-        curseldiv.innerHTML = "<b>cursel</b>: " + selectedShape.type + " " + selectedShape + "; <i>pos</i>: " + posstr + " ; <i>path</i>: " + pathstr + " ; <i>bounds</i>: " + bndstr + " ; <i>Cb</i>: " + cntstr + " ; <i>radius</i>: " + radstr + " ; <i>Cr</i>: " + cntrstr ;
+        curseldiv.innerHTML = "<b>cursel</b>: " + selectedShape.type + " " + selectedShape + "; <i>pos</i>: " + posstr + " ; <i>path</i>: " + pathstr + " ; <i>bounds</i>: " + bndstr + " ; <i>Cb</i>: " + cntstr + " ; <i>radius</i>: " + radstr + " ; <i>Cr</i>: " + cntrstr + "<br /><b>JSON</b>:" + jsonstr;
       }
 
       function setSelection(shape, isNotMarker) {
