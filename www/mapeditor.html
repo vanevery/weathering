@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <meta name="format-detection" content="telephone=no" />
+
+		<style>	      		
+      		#map {
+        		height: 400px;
+        		width: 600px;
+      		}
+    	</style>
+
+        <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBTOCpIOhRAtMINhn-wBLTlSl6S8bG1gsg&callback=initMap" async defer></script>
+        <script type="text/javascript">
+
+			var locations = {}; //{"bounds":[{"lat":42.34665475896394,"lng":-71.09318912029266},{"lat":42.346650794214554,"lng":-71.09199821949005},{"lat":42.34601643109272,"lng":-71.09200358390808},{"lat":42.34605211418822,"lng":-71.0932856798172}]};
+			var polygon = null;
+
+        	var latCenter = 42.3409609;
+        	var lngCenter = -71.09505250000001;
+						
+			var map, marker;
+			function initMap() {
+				
+				map = new google.maps.Map(document.getElementById('map'), {
+					center: {lat: latCenter, lng: lngCenter},
+					zoom: 15
+				});
+				
+				displayLocation();
+				
+				document.getElementById('load').addEventListener('input',
+					function() {
+						locations = JSON.parse(document.getElementById('load').value);
+						displayLocation();
+					}
+				);
+			}
+			
+			function displayLocation() {
+				if (map && locations.bounds) {
+					polygon = new google.maps.Polygon({
+						paths: locations.bounds,
+						strokeColor: '#FF0000',
+						strokeOpacity: 0.8,
+						strokeWeight: 2,
+						fillColor: '#FF0000',
+						fillOpacity: 0.35,
+						editable: true,
+						draggable: true
+					});
+					polygon.setMap(map);
+
+					google.maps.event.addListener(polygon, 'click', function() {
+						outputShape(polygon);
+					});    					
+				}
+			}
+			
+			function outputShape(shape) {
+				var shapeObj = {};
+				shapeObj.bounds = [];
+		
+				var jsonstr = "\"bounds\": [";      	
+		
+				for (var i = 0; i < shape.getPath().getLength(); i++) {
+					var point = {};
+					point.lat = shape.getPath().getAt(i).lat();
+					point.lng = shape.getPath().getAt(i).lng();
+
+					shapeObj.bounds.push(point);
+
+					if (i != 0) jsonstr += ",";
+					jsonstr += "{\"lat\": " + shape.getPath().getAt(i).lat() + ", \"lng\": " + shape.getPath().getAt(i).lng() + "}";
+				}
+				jsonstr += "],";
+
+				document.getElementById('edit').innerHTML = "<b>JSON</b>: " + JSON.stringify(shapeObj);			
+			}
+
+        </script>
+
+        <title>Map Editor</title>
+    </head>
+    <body>
+        <div>
+		    <div id="map"></div>
+		    <div><b>Input</b>:
+		    	<textarea id="load"></textarea>
+		    	<br />
+		    	Paste In JSON, Example: <i>{"bounds":[{"lat":42.34665475896394,"lng":-71.09318912029266},{"lat":42.346650794214554,"lng":-71.09199821949005},{"lat":42.34601643109272,"lng":-71.09200358390808},{"lat":42.34605211418822,"lng":-71.0932856798172}]}</i>
+		    </div>
+		    <br /><br />
+			<div id="edit"><b>Output</b>: 
+				Click on polygon to get updated output			
+			</div>		    
+        </div>
+    </body>
+</html>
+
+
