@@ -1,15 +1,16 @@
 <html>
 	<head>
 		<script type="text/javascript">
-	var audioContext = null;
-		var audiotoload = null;
-			var audioSource = null;
-			var lowpassNode = null;
+		
+var audioContext = null;
+var audiotoload = null;
+var audioSource = null;
+var lowpassNode = null;
 			
 window.addEventListener('load', function() {
 audioContext = new AudioContext();
- audiotoload = document.getElementById("audiotoplay");	
- audioSource = audioContext.createMediaElementSource(audiotoload); // No longer playable by the normal audio tag
+audiotoload = document.getElementById("audiotoplay");	
+audioSource = audioContext.createMediaElementSource(audiotoload); // No longer playable by the normal audio tag
 
 lowpassNode = audioContext.createBiquadFilter();
 	lowpassNode.type = "lowpass";

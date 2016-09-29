@@ -8,6 +8,39 @@ The JSON file should include an array (with a starting "[" and an ending "]" of 
 {...},
 ]
 
+// NEW IN PROGRESS ARRAY FORMAT:
+{"type": "region_array", "mode": "random", "lat": 42.341813, "lng": -71.095947, "label": "Olmsted Culvert", "bounds": [{"lat":42.34070338864853, "lng":-71.0999858379364}, {"lat":42.340568574268325, "lng":-71.09968543052673}, {"lat":42.34027515373573, "lng":-71.09994292259216}, {"lat":42.34046548072371, "lng":-71.10025405883789}], "volume": 0, "fadeintime": 1000, "fadeouttime": 1000, "audio_array": ["https://www.walking-productions.com/weathering/assets/audio/PDT/PdT_1stbridge-greenashtrees-japaneseknotweed.mp3", "https://www.walking-productions.com/weathering/assets/audio/PDT/PdT_branch-reiteration-LOCATE.mp3", "https://www.walking-productions.com/weathering/assets/audio/PDT/PdT_burroad-thisistheburroak.mp3"]},
+{"type": "region_array", "mode": "sequential", "lat": 42.341813, "lng": -71.095947, "label": "Olmsted Culvert", "bounds": [{"lat":42.34070338864853, "lng":-71.0999858379364}, {"lat":42.340568574268325, "lng":-71.09968543052673}, {"lat":42.34027515373573, "lng":-71.09994292259216}, {"lat":42.34046548072371, "lng":-71.10025405883789}], "volume": 0, "fadeintime": 1000, "fadeouttime": 1000, "audio_array": ["https://www.walking-productions.com/weathering/assets/audio/PDT/PdT_2ndbridge-phragmites-drainage.L.mp3", "https://www.walking-productions.com/weathering/assets/audio/PDT/PdT_gatehouse-Stonybrook.mp3", "https://www.walking-productions.com/weathering/assets/audio/PDT/PdT_OMG-generator-pipes.L.mp3"]}
+
+if (!locations[i].hasOwnProperty("mode")) {
+	// Only matters with region_array
+	console.log("Doesn't have mode, adding it");
+	locations[i].mode = "sequential";
+	// Other possibility is "random"
+}
+
+// TAKING OUT
+//num_simultaneous": 2
+//if (!locations[i].hasOwnProperty("num_simultaneous")) {
+	// Only matters with region_array
+//	console.log("Doesn't have num_simultaneous, adding it");
+//	locations[i].num_simultaneous = 1;
+//}
+
+// audio_array for region_array
+if (locations[i].hasOwnProperty("audio_array")) {
+	console.log("Has audio_array, create audio");
+	if (locations[i].audio_array.length > 0) {
+		locations[i].audio = locations[i].audio_array[0];
+	} else {
+		log("Error, no audio_array or audio");
+		locations[i].audio = "";  // This is an error
+	}
+}
+
+
+// Need to document loop attribute
+
 All objects have a set of properties/attributes:
 
 	"type": "region", "point", "path", or "algopath" see below (required)
@@ -15,6 +48,7 @@ All objects have a set of properties/attributes:
 	"lng": -71.097781 is the starting or midpoint longitude (required)
 	"label": "region name" is the name of the region (required)
 	"audio": "https://server/path/to/audio.mp3" is a URL to an audio file to play, should be https (required)
+	“loop”: true or false, default is false, whether or not the audio file should loop
 	"volume": 0-1 is the starting volume (required)
 	"fadeintime": 0-10000 time in milliseconds (1000 is 1 second) to fade in, only works when "distancefade" is false.
 	"fadeouttime": 0-10000 time in milliseconds (1000 is 1 second) to fade out, only works when "distancefade" is false.

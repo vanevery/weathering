@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <meta name="format-detection" content="telephone=no" />
+
+		<style>	      		
+      		#map {
+        		height: 300px;
+        		width: 300px;
+      		}
+    	</style>
+
+        <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBTOCpIOhRAtMINhn-wBLTlSl6S8bG1gsg&callback=initMap" async defer></script>
+        <script type="text/javascript">
+
+        	var LOCATIONS_JSON = "https://www.walking-productions.com/weathering/assets/weathering_web.json";
+        	var FADE_INTERVAL = 200; // milliseconds
+
+        	var latCenter = 42.3409609;
+        	var lngCenter = -71.09505250000001;
+        	var diffLat = 0;
+        	var diffLng = 0;
+        	var currentLat = 0;
+			var currentLng = 0;
+
+			var locations = [];
+			
+			var audioContext = null;
+			
+			var map, marker;
+			function initMap() {
+				log("initMap");
+				
+				map = new google.maps.Map(document.getElementById('map'), {
+					center: {lat: latCenter, lng: lngCenter},
+					zoom: 18
+				});
+
+				marker = new google.maps.Marker({
+					position: {lat: latCenter, lng: lngCenter},
+					map: map,
+					title: 'X'
+				});
+				
+				displayLocations();
+			}
+			
+			function displayLocations() {
+				log("displayLocations");
+				if (map) {
+					for (var i = 0; i < locations.length; i++) {
+						//log(locations[i]);
+
+						if (!locations[i].hasOwnProperty("fadetype")) {
+							console.log("Doesn't have fadetype, adding it");
+							locations[i].fadetype = "volume";
+						}
+
+						if (!locations[i].hasOwnProperty("frequencymin")) {
+							console.log("Doesn't have frequencymin, adding it");
+							locations[i].frequencymin = 0;
+						}
+
+						if (!locations[i].hasOwnProperty("frequencymax")) {
+							console.log("Doesn't have frequencymax, adding it");
+							locations[i].frequencymax = 32768;
+						}
+
+						if (!locations[i].hasOwnProperty("fadein")) {
+							console.log("Doesn't have fadein, adding it");
+							locations[i].fadein = false;
+						}
+
+						if (!locations[i].hasOwnProperty("fadeout")) {
+							console.log("Doesn't have fadeout, adding it");
+							locations[i].fadeout = false;
+						}
+						
+						if (!locations[i].hasOwnProperty("fadeTimeout")) {
+							console.log("Doesn't have fadeTimeout, adding it");
+							locations[i].fadeTimeout = null;
+						}
+						
+						if (!locations[i].hasOwnProperty("probability")) {
+							console.log("Doesn't have probability, adding it");
+							locations[i].probability = 100;
+						}
+						
+						if (!locations[i].hasOwnProperty("within")) {
+							console.log("Doesn't have within, adding it");
+							locations[i].within = false;
+						}
+					
+						if (!locations[i].hasOwnProperty("distancefade")) {
+							console.log("Doesn't have distancefade, adding it");
+							locations[i].distancefade = false;
+						}
+											
+						if (locations[i].type == "region") {
+							var polygon = new google.maps.Polygon({
+								paths: locations[i].bounds,
+								strokeColor: '#FF0000',
+								strokeOpacity: 0.8,
+								strokeWeight: 2,
+								fillColor: '#FF0000',
+								fillOpacity: 0.35
+							});
+							polygon.setMap(map);
+							locations[i].polygon = polygon;
+						}
+						else if (locations[i].type == "path") {
+							// Draw the path
+							var polygon = new google.maps.Polygon({
+								paths: locations[i].path,
+								strokeColor: '#00FF00',
+								strokeOpacity: 0.8,
+								strokeWeight: 2,
+								fillColor: '#00FF00',
+								fillOpacity: 0.35
+							});
+							polygon.setMap(map);
+							locations[i].polygon = polygon;						
+
+							// Place a marker
+							var locmarker = new google.maps.Marker({
+								position: {lat: locations[i].lat, lng: locations[i].lng},
+								map: map,
+								title: locations[i].label,
+								icon: {
+									  path: google.maps.SymbolPath.CIRCLE,
+									  scale: 10
+								}								
+							});		
+							locations[i].marker = locmarker;	
+							locations[i].currentPathIndex = 0;
+														
+							locations[i].moveInterval = setInterval(function(enclosedlocation) {
+
+								if (enclosedlocation.currentPathIndex < enclosedlocation.path.length - 1) {
+									enclosedlocation.currentPathIndex++;
+								} else {
+									enclosedlocation.currentPathIndex = 0;
+								}
+								
+								enclosedlocation.lat =  enclosedlocation.path[enclosedlocation.currentPathIndex].lat;
+								enclosedlocation.lng =  enclosedlocation.path[enclosedlocation.currentPathIndex].lng;
+								
+								enclosedlocation.marker.setPosition( enclosedlocation.path[enclosedlocation.currentPathIndex] );	
+								update({lat: currentLat, lng: currentLng});
+							}, locations[i].speed, locations[i]);
+											
+						} else if (locations[i].type == "algopath") {
+
+							// Place a marker
+							var locmarker = new google.maps.Marker({
+								position: {lat: locations[i].lat, lng: locations[i].lng},
+								map: map,
+								title: locations[i].label,
+								icon: {
+									  path: google.maps.SymbolPath.CIRCLE,
+									  scale: 10
+								}								
+							});		
+							locations[i].marker = locmarker;	
+							locations[i].moveInterval = setInterval(function(enclosedlocation) {
+								enclosedlocation.lat = eval(enclosedlocation.lat_formula);
+								enclosedlocation.lng = eval(enclosedlocation.lng_formula);
+								enclosedlocation.marker.setPosition( {lat: enclosedlocation.lat, lng: enclosedlocation.lng} );	
+								update({lat: currentLat, lng: currentLng});
+							}, locations[i].speed,locations[i]);
+
+						
+						} else if (locations[i].type == "point") {
+							var locmarker = new google.maps.Marker({
+								position: {lat: locations[i].lat, lng: locations[i].lng},
+								map: map,
+								title: locations[i].label,
+								icon: {
+									  path: google.maps.SymbolPath.CIRCLE,
+									  scale: 5,
+									  strokeColor:"#B40404"
+								}								
+							});		
+							locations[i].marker = locmarker;						
+						}
+					}			
+				}
+			}
+
+			function log(message) {
+				//document.getElementById('log').innerHTML = message + " " + document.getElementById('log').innerHTML;
+				console.log(message);
+			}
+
+        	function recenter() {
+				diffLat = latCenter - currentLat;
+    	    	diffLng = lngCenter - currentLng;
+
+        		log(diffLat + " " + diffLng);
+    	    }
+    	    
+    	    function up() {
+    	    	diffLat += 0.0001;
+    	    	
+				log(diffLat + " " + diffLng);
+    	    }
+    	    
+    	    function down() {
+    	    	diffLat -= 0.0001;
+    	    	
+        		log(diffLat + " " + diffLng);    	    	
+    	    }
+    	    
+    	    function right() {
+    	    	diffLng += 0.0001;
+    	    	
+				log(diffLat + " " + diffLng);
+    	    }
+    	    
+    	    function left() {
+    	    	diffLng -= 0.0001;
+    	    	
+        		log(diffLat + " " + diffLng);
+    	    }
+        			
+			function fadeOut(index) {
+				// If we have a fadein going on, cancel it
+				if (locations[index].fadein) {
+					locations[index].fadein = false;
+
+					// Clear any existing fadeIn or fadeOut timeouts
+					if (locations[index].fadeTimeout != null) {
+						clearTimeout(locations[index].fadeTimeout);
+						locations[index].fadeTimeout = null;
+					}
+				}
+				else
+				{
+					if (locations[index].fadetype == "volume") {
+				
+						// If we are greater than 0 then we can do a fadeout
+						if (locations[index].volume > 0) {
+
+							log("fadeOut " + locations[index]);
+
+							// set fadeout to true so know what's up
+							locations[index].fadeout = true;
+
+							// Lower the volume
+							locations[index].volume = locations[index].volume - FADE_INTERVAL/locations[index].fadeouttime;
+															//1/(location.fadeouttime/FADE_INTERVAL);
+
+							if (locations[index].volume < 0) locations[index].volume = 0;
+
+							// Set the timeout to actually do the volume lowering
+							var fadeTimeout = setTimeout(function() {
+							
+								//window.plugins.NativeAudio.setVolumeForComplexAsset(index,locations[index].volume,	function(message){log(message);}, function(error){log(error);});
+								locations[index].element.volume = locations[index].volume;
+														
+								// Call the fadeOut again	
+								fadeOut(index);
+							
+								// After a set interval
+							},FADE_INTERVAL);
+
+							// Store the timeout object
+							locations[index].fadeTimeout = fadeTimeout;
+						} else {
+							// Otherwise we are done and we'll set fadeout to false
+							locations[index].fadeout = false;
+						
+							// Pause it
+							locations[index].element.pause();
+						}
+					} else if (locations[index].fadetype == "lowpass") {
+						
+						// If we are greater than min then we can do a fadeout
+						if (locations[index].node.frequency.value > locations[index].frequencymin) {
+
+							log("fadeOut " + locations[index]);
+
+							// set fadeout to true so know what's up
+							locations[index].fadeout = true;
+
+							// Lower the volume
+							locations[index].node.frequency.value = locations[index].node.frequency.value - FADE_INTERVAL/locations[index].fadeouttime * (locations[index].frequencymax - locations[index].frequencymin);
+
+							if (locations[index].node.frequency.value < locations[index].frequencymin) locations[index].node.frequency.value = locations[index].frequencymin;
+
+							// Set the timeout to actually do the volume lowering
+							var fadeTimeout = setTimeout(function() {
+																					
+								// Call the fadeOut again	
+								fadeOut(index);
+							
+								// After a set interval
+							},FADE_INTERVAL);
+
+							// Store the timeout object
+							locations[index].fadeTimeout = fadeTimeout;
+						} else {
+							// Otherwise we are done and we'll set fadeout to false
+							locations[index].fadeout = false;
+						
+							// Pause it
+							locations[index].element.pause();
+						}					
+					}
+				}
+			}
+
+			function fadeIn(index) {
+				console.log(locations[index].element.readyState + " " + locations[index].element.paused);
+				
+				if (locations[index].element.readyState == 4
+					&& locations[index].element.paused) {
+					locations[index].element.play();
+					console.log(index + " play");
+	
+				} else {
+					console.log(index + " " + locations[index].element.readyState);
+				}
+
+				// If we have a fadeout going on, cancel it
+				if (locations[index].fadeout) {
+					locations[index].fadeout = false;
+
+					// Clear any existing fadeIn or fadeOut timeouts
+					if (locations[index].fadeTimeout != null) {
+						clearTimeout(locations[index].fadeTimeout);
+						locations[index].fadeTimeout = null;
+					}
+				}
+				else
+				{
+					// If we don't have a fadeout going on, do a fade in
+					if (locations[index].fadetype == "lowpass") {
+						
+						// Set the volume to 1
+						locations[index].element.volume = 1;
+						
+						console.log("fadetype is lowpass");
+
+						// If we are less than min then we can do a fadein
+						if (locations[index].node.frequency.value < locations[index].frequencymax) {
+							log("fadeIn " + locations[index]);
+	
+							// set fadeout to true so know what's up
+							locations[index].fadein = true;
+
+							locations[index].node.frequency.value = locations[index].node.frequency.value + FADE_INTERVAL/locations[index].fadeintime * (locations[index].frequencymax - locations[index].frequencymin);
+															//1/(location.fadeouttime/FADE_INTERVAL);
+
+							log(locations[index].node.frequency.value);
+						
+							if (locations[index].node.frequency.value > locations[index].frequencymax) locations[index].node.frequency.value = locations[index].frequencymax;
+
+							// Set the timeout to actually do the volume lowering
+							var fadeTimeout = setTimeout(function() {
+														
+								// Call the fadeOut again	
+								fadeIn(index);
+								// After a set interval
+							},FADE_INTERVAL);
+
+							// Store the timeout object
+							locations[index].fadeTimeout = fadeTimeout;
+						} else {
+							// Otherwise we are done and we'll set fadein to false
+							locations[index].fadein = false;
+						}
+						
+					} else if (locations[index].fadetype == "volume") {
+
+						// If we are less than min then we can do a fadein
+						if (locations[index].volume < 1) {
+							log("fadeIn " + locations[index]);
+	
+							// set fadeout to true so know what's up
+							locations[index].fadein = true;
+
+							// Raise the volume
+							locations[index].volume = locations[index].volume + FADE_INTERVAL/locations[index].fadeintime;
+															//1/(location.fadeouttime/FADE_INTERVAL);
+						
+							if (locations[index].volume > 1) locations[index].volume = 1;
+
+							// Set the timeout to actually do the volume lowering
+							var fadeTimeout = setTimeout(function() {
+							
+								//window.plugins.NativeAudio.setVolumeForComplexAsset(index,locations[index].volume,	function(message){log(message);}, function(error){log(error);});
+								locations[index].element.volume = locations[index].volume;							
+							
+								// Call the fadeOut again	
+								fadeIn(index);
+								// After a set interval
+							},FADE_INTERVAL);
+
+							// Store the timeout object
+							locations[index].fadeTimeout = fadeTimeout;
+						} else {
+							// Otherwise we are done and we'll set fadein to false
+							locations[index].fadein = false;
+						}
+					}
+				}
+			}
+
+        	function update(pos) {
+				for (var i = 0; i < locations.length; i++) {
+					if (locations[i].type == "region") {
+						console.log("Checking region" + i);
+						// Inside region
+						if (inside(pos, locations[i].bounds)) {
+							console.log("in");
+							// Were they already inside
+							if (!locations[i].within) {
+								console.log("wasn't within previously");
+								locations[i].within = true;
+								// Check probability
+								if (Math.random()*100 <= locations[i].probability) {												
+									console.log("within probability");								
+									if (locations[i].fadein == false) {
+										console.log("not currently fading in");
+										fadeIn(i);
+									}
+								}
+							} else {
+								
+							}
+						} else {
+							console.log("out");
+							locations[i].within = false;
+							if (locations[i].fadeout == false) {
+								fadeOut(i);
+							}
+						}
+					} else if (locations[i].type == "algopath" || locations[i].type == "path" || locations[i].type == "point") {
+						if (inrange(pos, locations[i])) {
+							if (!locations[i].distancefade) {
+							// Were they already inside
+							if (!locations[i].within) {
+								locations[i].within = true;
+								// Check probability
+								if (Math.random()*100 <= locations[i].probability) {																		
+										if (locations[i].fadein == false) {
+										fadeIn(i);
+									}
+								}
+							}
+						} else {
+								// Distance Fade
+								if (locations[i].element.readyState == 4
+									&& locations[i].element.paused) {
+									locations[i].element.play();
+									console.log(i + " play");
+									locations[i].element.volume = 1;
+								}
+								locations[i].node.frequency.value = (locations[i].maxdistance - geoDistance(pos.lat, pos.lng, locations[i].lat, locations[i].lng))/locations[i].maxdistance * (locations[i].frequencymax - locations[i].frequencymin) + locations[i].frequencymin;							
+								console.log(locations[i].node.frequency.value);
+							}
+						} else {
+							locations[i].within = false;
+							if (!locations[i].distancefade) {
+								if (locations[i].fadeout == false) {
+								fadeOut(i);
+							}
+							} else {
+								// Distance Fade
+								locations[i].node.frequency.value = locations[i].frequencymin;
+								locations[i].element.pause();
+							}
+						}
+					}
+				}        		
+        	}
+
+			function inrange(point, emitter) {
+			
+				//console.log(point.lat + " " + point.lng + " " + emitter.lat + " " + emitter.lng + " " + geoDistance(point.lat, point.lng, emitter.lat, emitter.lng));
+				
+				if (geoDistance(point.lat, point.lng, emitter.lat, emitter.lng) < emitter.maxdistance) {
+					return true;
+				} else {
+					return false;
+				}
+			}
+
+			function inside(point, vs) {
+			    var inside = false;
+			    var y = point.lat;
+			    var x = point.lng;
+
+    			for (var i = 0, j = vs.length - 1; i < vs.length; j = i++) {
+        			var xi = vs[i].lng, yi = vs[i].lat;
+        			var xj = vs[j].lng, yj = vs[j].lat;
+        
+        			var intersect = ((yi > y) != (yj > y))
+            			&& (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
+        			if (intersect) inside = !inside;
+    			}
+    			return inside;
+			};
+
+			function geoDistance(lat1, lng1, lat2, lng2, unit) {
+			    var radlat1 = Math.PI * lat1/180
+			    var radlat2 = Math.PI * lat2/180
+			    var radlng1 = Math.PI * lng1/180
+			    var radlng2 = Math.PI * lng2/180
+			    var theta = lng1-lng2
+			    var radtheta = Math.PI * theta/180
+			    var dist = Math.sin(radlat1) * Math.sin(radlat2) + Math.cos(radlat1) * Math.cos(radlat2) * Math.cos(radtheta);
+			    dist = Math.acos(dist)
+			    dist = dist * 180/Math.PI
+			    dist = dist * 60 * 1.1515
+			    if (unit=="K") { dist = dist * 1.609344 }
+			    if (unit=="N") { dist = dist * 0.8684 }
+			    return dist
+			}
+        	
+        	var count = 0;
+			function locationWatchPositionCallback(currentPosition) 
+            {
+           		//log("locationWatchPositionCallback"+count);           		
+           		count++;
+
+            	currentLat = currentPosition.coords.latitude;
+				currentLng = currentPosition.coords.longitude;
+
+				currentLat += diffLat;
+				currentLng += diffLng;
+
+				document.getElementById('currentLocation').innerHTML = currentLat + " " + currentLng;
+
+				var mapPos = {
+			        lat: currentLat,
+        			lng: currentLng
+      			};					
+				map.setCenter(mapPos);
+      			marker.setPosition(mapPos);
+
+				update(mapPos);
+
+				/*
+				setTimeout(
+					function() { 
+						navigator.geolocation.getCurrentPosition(locationWatchPositionCallback, locationWatchPositionErrorCallback, 
+                			{ maximumAge: 3000, timeout: 3000, enableHighAccuracy: true });
+					}, 
+					2000);
+				*/
+			}
+
+            function locationWatchPositionErrorCallback(e) {
+ 	          	log(e);
+ 	          	/*
+				setTimeout(
+					function() { 
+						navigator.geolocation.getCurrentPosition(locationWatchPositionCallback, locationWatchPositionErrorCallback, 
+                			{ maximumAge: 3000, timeout: 3000, enableHighAccuracy: true });
+					}, 
+					5000); 	          
+				*/
+            }
+
+            function loadLocations(completeCallback) {
+				var oReq = new XMLHttpRequest();
+				oReq.onload = function (e) {
+					//console.log(e.target.response);
+				    locations = JSON.parse(e.target.response);
+				    //console.log(locations);
+				    completeCallback();
+				};
+				oReq.open('GET', LOCATIONS_JSON + '?' + new Date().getTime(), true);
+				//oReq.responseType = 'json';
+				oReq.send();				
+            }
+
+			function onWindowLoad() {
+				//document.addEventListener('deviceready', onDeviceReady);
+				onDeviceReady();
+			}
+	
+			function onDeviceReady() {
+				log("onDeviceReady");
+
+				window.AudioContext = window.AudioContext || window.webkitAudioContext;
+				audioContext = new AudioContext();
+
+				// Load Locations
+				loadLocations(
+					function() {
+						log("loadLocations");
+
+						// If the map is already loaded
+						displayLocations();
+
+// 						var newlocations = [];
+// 						for (var i = 0; i < locations.length; i++) {
+// 							// Check probability:
+// 							if (Math.random()*100 <= locations[i].probability) {
+// 								newlocations.push(locations[i]);
+// 							}
+// 						}
+// 						locations = newlocations;
+						
+						// Load Audio Files
+						for (var i = 0; i < locations.length; i++) {
+							
+							var div = document.createElement("div");
+							div.setAttribute("id","location"+i);
+							//div.innerHTML = locations[i].label;
+							document.getElementById("locations").appendChild(div);
+							
+							var audio = document.createElement("audio");
+							audio.src = locations[i].audio;
+							audio.setAttribute("id","audio"+i);
+							
+							audio.preload = "auto";
+							audio.loop = true;
+							audio.muted = false;
+							audio.controls = true;
+							audio.volume = 0;
+							
+							locations[i].element = audio;
+							div.appendChild(audio);
+							
+							document.getElementById("locations").appendChild(div);					
+							
+							if (locations[i].fadetype == "lowpass") {
+								locations[i].audioSource = audioContext.createMediaElementSource(locations[i].element);
+								locations[i].node = audioContext.createBiquadFilter();
+								locations[i].node.type = "lowpass";
+								locations[i].node.frequency.value = locations[i].frequencymin;
+								locations[i].node.gain.value = 100;
+								locations[i].audioSource.connect(locations[i].node);
+								locations[i].node.connect(audioContext.destination);
+								
+								locations[i].volume = 1;							
+							}											
+						}				
+
+						/*
+		                if (navigator.geolocation) 
+		                {
+		                	log("navigator.geolocation");
+
+							navigator.geolocation.getCurrentPosition(locationWatchPositionCallback, locationWatchPositionErrorCallback, 
+		                		{ maximumAge: 2000, timeout: 3000, enableHighAccuracy: true });
+		                }
+			            */
+					}
+				);
+			}
+	
+			window.addEventListener('load', onWindowLoad);
+
+			window.addEventListener('load', function() {
+				document.getElementById("start").addEventListener('click',
+					function() {
+						for (var i = 0; i < locations.length; i++) {
+							console.log("Playing " + i);
+							locations[i].element.play();
+						}
+						
+						setTimeout(function() {
+							for (var i = 0; i < locations.length; i++) {
+								console.log("Pause " + i);
+								locations[i].element.pause();
+							}
+						},500);	
+						
+						navigator.geolocation.watchPosition(locationWatchPositionCallback, locationWatchPositionErrorCallback, 
+                			{ maximumAge: 3000, timeout: 3000, enableHighAccuracy: true });
+
+					});
+			});
+
+        </script>
+
+        <title>Weathering</title>
+    </head>
+    <body>
+        <div>
+            <h1>Weathering</h1>
+            <div id="startdiv">Click first: <input type="button" id="start" value="Start"></div>
+		    <div id="map"></div>
+			<div id="locations"></div>		    
+			<div>Current Location: <div id="currentLocation"></div></div>
+			<br /><br />
+			<div>Walk around virtually: <button id="up" onclick="up();">Up</button> <button id="down" onclick="down();">Down</button> <button id="left" onclick="left();">Left</button> <button id="right" onclick="right();">Right</button>
+			<div><button id="center" onclick="recenter();">Recenter</button> (Only click if you are testing off-site)</div>
+			<div id="log"></div>
+        </div>
+    </body>
+</html>
+
+

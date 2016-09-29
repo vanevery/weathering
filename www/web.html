@@ -15,7 +15,7 @@
         <script type="text/javascript">
 
         	var LOCATIONS_JSON = "https://www.walking-productions.com/weathering/assets/weathering_web.json";
-        	var FADE_INTERVAL = 200; // milliseconds
+        	var FADE_INTERVAL = 100; // milliseconds
 
         	var latCenter = 42.3409609;
         	var lngCenter = -71.09505250000001;
@@ -51,6 +51,11 @@
 				if (map) {
 					for (var i = 0; i < locations.length; i++) {
 						//log(locations[i]);
+
+						if (!locations[i].hasOwnProperty("loop")) {
+							console.log("Doesn't have loop, adding it");
+							locations[i].loop = false;
+						}
 
 						if (!locations[i].hasOwnProperty("fadetype")) {
 							console.log("Doesn't have fadetype, adding it");
@@ -441,16 +446,16 @@
 						if (inrange(pos, locations[i])) {
 							if (!locations[i].distancefade) {
 							// Were they already inside
-							if (!locations[i].within) {
-								locations[i].within = true;
-								// Check probability
-								if (Math.random()*100 <= locations[i].probability) {																		
-										if (locations[i].fadein == false) {
-										fadeIn(i);
+								if (!locations[i].within) {
+									locations[i].within = true;
+									// Check probability
+									if (Math.random()*100 <= locations[i].probability) {																		
+											if (locations[i].fadein == false) {
+											fadeIn(i);
+										}
 									}
 								}
-							}
-						} else {
+							} else {
 								// Distance Fade
 								if (locations[i].element.readyState == 4
 									&& locations[i].element.paused) {
@@ -465,8 +470,8 @@
 							locations[i].within = false;
 							if (!locations[i].distancefade) {
 								if (locations[i].fadeout == false) {
-								fadeOut(i);
-							}
+									fadeOut(i);
+								}
 							} else {
 								// Distance Fade
 								locations[i].node.frequency.value = locations[i].frequencymin;
@@ -615,7 +620,7 @@
 							audio.setAttribute("id","audio"+i);
 							
 							audio.preload = "auto";
-							audio.loop = true;
+							audio.loop = locations[i].loop;
 							audio.muted = false;
 							audio.controls = true;
 							audio.volume = 0;
